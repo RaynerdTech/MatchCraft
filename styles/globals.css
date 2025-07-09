@@ -1,0 +1,24 @@
+input, button, link, a {
+    cursor: pointer;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Add these animation styles */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-in-out forwards;
+}
+
