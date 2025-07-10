@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, MapPin, AlertCircle, Image as ImageIcon, Wind, ChevronDown, PartyPopper, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, AlertCircle, Image as ImageIcon, Wind, PartyPopper, CheckCircle2 } from 'lucide-react';
 
 type Props = {
   userId: string;
@@ -239,7 +239,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
       const createdEvent = await response.json();
       setCreatedEventId(createdEvent._id);
-      
+
       // Clear storage and form
       sessionStorage.removeItem('eventFormData');
       setFormData({
@@ -359,34 +359,43 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
                 {/* Date & Time Fields */}
                 <div className="grid md:grid-cols-2 gap-6">
+                  {/* ====== MODIFICATION START: Date Input ====== */}
                   <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                    <InputField icon={Calendar}>
-                      <input
-                        id="date"
-                        type="date"
-                        value={formData.date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                        min={today}
-                        required
-                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 appearance-none"
-                      />
-                      <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
-                    </InputField>
+                    <span className="block text-sm font-medium text-gray-700 mb-2">Date</span>
+                    <label htmlFor="date" className="cursor-pointer">
+                      <InputField icon={Calendar}>
+                          <input
+                            id="date"
+                            type="date"
+                            value={formData.date}
+                            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                            min={today}
+                            required
+                            // Style to make the native picker UI less visible but functional
+                            className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                          />
+                      </InputField>
+                    </label>
                   </div>
+                  {/* ====== MODIFICATION END: Date Input ====== */}
+
+                  {/* ====== MODIFICATION START: Time Input ====== */}
                   <div>
-                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                    <InputField icon={Clock}>
-                      <input
-                        id="time"
-                        type="time"
-                        value={formData.time}
-                        onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
-                        required
-                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-                      />
-                    </InputField>
+                    <span className="block text-sm font-medium text-gray-700 mb-2">Time</span>
+                     <label htmlFor="time" className="cursor-pointer">
+                        <InputField icon={Clock}>
+                          <input
+                            id="time"
+                            type="time"
+                            value={formData.time}
+                            onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                            required
+                            className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                          />
+                        </InputField>
+                      </label>
                   </div>
+                  {/* ====== MODIFICATION END: Time Input ====== */}
                 </div>
 
                 {/* Description Field */}
@@ -432,26 +441,26 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                 </div>
 
                 {/* Slots Field */}
-<div>
-  <label htmlFor="slots" className="block text-sm font-medium text-gray-700 mb-2">
-    Available Slots
-  </label>
-  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
-    <input
-      id="slots"
-      type="number"
-      min="1"
-      placeholder="Number of available spots"
-      value={formData.slots}
-      onChange={(e) => setFormData(prev => ({ ...prev, slots: Number(e.target.value) }))}
-      className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-      required
-    />
-  </div>
-  <p className="mt-1 text-xs text-gray-500">
-    Maximum number of participants for this event
-  </p>
-</div>
+                <div>
+                  <label htmlFor="slots" className="block text-sm font-medium text-gray-700 mb-2">
+                    Available Slots
+                  </label>
+                  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
+                    <input
+                      id="slots"
+                      type="number"
+                      min="1"
+                      placeholder="Number of available spots"
+                      value={formData.slots}
+                      onChange={(e) => setFormData(prev => ({ ...prev, slots: Number(e.target.value) }))}
+                      className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                      required
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Maximum number of participants for this event
+                  </p>
+                </div>
 
                 {/* Image Upload */}
                 <div>
