@@ -25,8 +25,9 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropAreaRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  // Added new state for success modal and created event ID
+  // State for success modal and created event ID
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -42,8 +43,8 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     preview: null as string | null
   });
 
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -51,29 +52,25 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   // Using environment variable for API key
   const GEOAPIFY_API_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
 
-  // --- Persistence Logic: Load from sessionStorage on initial mount ---
+  // --- Persistence Logic ---
   useEffect(() => {
-    console.log("PERSISTENCE: Component mounted. Attempting to load form data from sessionStorage...");
     const savedFormData = sessionStorage.getItem('eventFormData');
     if (savedFormData) {
       try {
         const parsed = JSON.parse(savedFormData);
-        console.log("PERSISTENCE: Parsed saved data from sessionStorage:", parsed);
         setFormData(prev => ({
           ...prev,
           ...parsed,
+          // We don't restore the File object, but we keep the preview URL
           image: null,
           preview: parsed.preview || null,
         }));
-        console.log("PERSISTENCE: formData state set from sessionStorage with:", parsed);
       } catch (err) {
-        console.error("PERSISTENCE ERROR: Failed to parse saved form data from sessionStorage:", err);
+        console.error("Failed to parse saved form data:", err);
       }
-    } else {
-      console.log("PERSISTENCE: No saved form data found in sessionStorage.");
     }
-
-    // --- Drag and Drop Event Listeners Setup ---
+    
+    // Drag and Drop Event Listeners
     const dropArea = dropAreaRef.current;
     if (!dropArea) return;
 
@@ -125,33 +122,54 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   useEffect(() => {
     const handler = setTimeout(() => {
       const { image, ...dataToSave } = formData;
-      sessionStorage.setItem('eventFormData', JSON.stringify(dataToSave));
-      console.log("PERSISTENCE: Debounced Form data saved to sessionStorage:", dataToSave);
+      // Include the preview URL in the saved data
+      sessionStorage.setItem('eventFormData', JSON.stringify({
+        ...dataToSave,
+        preview: formData.preview
+      }));
     }, 300);
 
     return () => {
       clearTimeout(handler);
-      console.log("PERSISTENCE: Debounce timer cleared.");
     };
   }, [formData]);
+
+  // --- Form Validation ---
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+    
+    if (!formData.title) newErrors.title = "Event title is required";
+    if (!formData.location) newErrors.location = "Location is required";
+    if (!formData.date) newErrors.date = "Please select a date";
+    if (!formData.time) newErrors.time = "Please select a time";
+    if (!formData.preview) newErrors.image = "Please upload an event banner"; // Changed to check preview instead of image File object
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // --- File Handling ---
   const handleFile = (file: File) => {
     if (!file.type.match('image.*')) {
-      setError('Please select an image file.');
+      setErrors(prev => ({ ...prev, image: 'Please select an image file (JPEG, PNG, GIF)' }));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size should not exceed 5MB.');
+      setErrors(prev => ({ ...prev, image: 'Image size should not exceed 5MB' }));
       return;
     }
 
-    setError('');
+    setErrors(prev => ({ ...prev, image: '' }));
     setFormData(prev => ({ ...prev, image: file }));
+    
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, preview: reader.result as string }));
+      const previewUrl = reader.result as string;
+      setFormData(prev => ({ ...prev, preview: previewUrl }));
+    };
+    reader.onerror = () => {
+      setErrors(prev => ({ ...prev, image: 'Failed to process image' }));
     };
     reader.readAsDataURL(file);
   };
@@ -160,6 +178,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   const handleLocationChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchText = e.target.value;
     setFormData(prev => ({ ...prev, location: searchText }));
+    setErrors(prev => ({ ...prev, location: '' }));
 
     if (searchText.length < 3) {
       setSuggestions([]);
@@ -174,8 +193,8 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       const data = await res.json();
       setSuggestions(data.features || []);
     } catch (err) {
-      console.error("API_ERROR: Failed to fetch location suggestions", err);
-      setError("Failed to fetch location suggestions. Please try again later.");
+      console.error("Failed to fetch location suggestions", err);
+      setErrors(prev => ({ ...prev, location: 'Failed to fetch locations' }));
     } finally {
       setIsLocationLoading(false);
     }
@@ -183,6 +202,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
   const handleSuggestionClick = (suggestion: any) => {
     setFormData(prev => ({ ...prev, location: suggestion.properties.formatted }));
+    setErrors(prev => ({ ...prev, location: '' }));
     setSuggestions([]);
   };
 
@@ -195,8 +215,15 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   const toBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
+      reader.onloadend = () => {
+        const result = reader.result;
+        if (typeof result === 'string') {
+          resolve(result);
+        } else {
+          reject(new Error('Failed to convert image to base64'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading file'));
       reader.readAsDataURL(file);
     });
   };
@@ -204,17 +231,22 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   // --- Form Submission ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
 
-    if (!formData.title || !formData.location || !formData.date || !formData.time || !formData.image) {
-      setError("Please fill in all the required fields, including uploading an image.");
+    // If we have a preview but no File object (from session storage)
+    if (formData.preview && !formData.image) {
+      setErrors(prev => ({ ...prev, image: 'Please re-upload your image' }));
       return;
     }
 
     setLoading(true);
 
     try {
-      const imageBase64 = await toBase64(formData.image);
+      const imageBase64 = formData.preview || await toBase64(formData.image!);
 
       const response = await fetch('/api/events', {
         method: 'POST',
@@ -226,7 +258,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
           time: formData.time,
           description: formData.description,
           pricePerPlayer: formData.pricePerPlayer,
-          slots: formData.slots, // Add slots to the request
+          slots: formData.slots,
           imageBase64,
           userId,
         }),
@@ -249,16 +281,16 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
         time: '',
         description: '',
         pricePerPlayer: 0,
-        slots: 10, // Reset to default
+        slots: 10,
         image: null,
         preview: null,
       });
 
-      // Show success modal instead of immediate redirect
+      // Show success modal
       setShowSuccessModal(true);
     } catch (err: any) {
-      console.error("SUBMIT_ERROR: Event creation error:", err);
-      setError(err.message || 'An unexpected error occurred during event creation.');
+      console.error("Event creation error:", err);
+      setErrors(prev => ({ ...prev, form: err.message || 'An unexpected error occurred' }));
     } finally {
       setLoading(false);
     }
@@ -297,11 +329,11 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
             </div>
 
             {/* Form Content */}
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
-              {error && (
+            <form ref={formRef} onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+              {errors.form && (
                 <div className="flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg shadow-sm">
                   <AlertCircle className="h-5 w-5 mr-3" />
-                  <p className="text-sm">{error}</p>
+                  <p className="text-sm">{errors.form}</p>
                 </div>
               )}
 
@@ -309,31 +341,33 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                 {/* Title Field */}
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">Event Title</label>
-                  <InputField icon={Wind}>
+                  <InputField icon={Wind} error={!!errors.title}>
                     <input
                       id="title"
                       type="text"
                       placeholder="What's your event called?"
                       value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      required
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, title: e.target.value }));
+                        setErrors(prev => ({ ...prev, title: '' }));
+                      }}
                       className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
                     />
                   </InputField>
+                  {errors.title && <p className="text-red-500 text-xs mt-1 ml-1">{errors.title}</p>}
                 </div>
 
                 {/* Location Field */}
                 <div>
                   <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                   <div className="relative" ref={locationInputRef}>
-                    <InputField icon={MapPin}>
+                    <InputField icon={MapPin} error={!!errors.location}>
                       <input
                         id="location"
                         type="text"
                         placeholder="Where will it take place?"
                         value={formData.location}
                         onChange={handleLocationChange}
-                        required
                         className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
                       />
                     </InputField>
@@ -355,47 +389,45 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       </ul>
                     )}
                   </div>
+                  {errors.location && <p className="text-red-500 text-xs mt-1 ml-1">{errors.location}</p>}
                 </div>
 
                 {/* Date & Time Fields */}
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* ====== MODIFICATION START: Date Input ====== */}
                   <div>
-                    <span className="block text-sm font-medium text-gray-700 mb-2">Date</span>
-                    <label htmlFor="date" className="cursor-pointer">
-                      <InputField icon={Calendar}>
-                          <input
-                            id="date"
-                            type="date"
-                            value={formData.date}
-                            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                            min={today}
-                            required
-                            // Style to make the native picker UI less visible but functional
-                            className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-                          />
-                      </InputField>
-                    </label>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <InputField icon={Calendar} error={!!errors.date}>
+                      <input
+                        id="date"
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, date: e.target.value }));
+                          setErrors(prev => ({ ...prev, date: '' }));
+                        }}
+                        min={today}
+                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                      />
+                    </InputField>
+                    {errors.date && <p className="text-red-500 text-xs mt-1 ml-1">{errors.date}</p>}
                   </div>
-                  {/* ====== MODIFICATION END: Date Input ====== */}
 
-                  {/* ====== MODIFICATION START: Time Input ====== */}
                   <div>
-                    <span className="block text-sm font-medium text-gray-700 mb-2">Time</span>
-                     <label htmlFor="time" className="cursor-pointer">
-                        <InputField icon={Clock}>
-                          <input
-                            id="time"
-                            type="time"
-                            value={formData.time}
-                            onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
-                            required
-                            className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-                          />
-                        </InputField>
-                      </label>
+                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                    <InputField icon={Clock} error={!!errors.time}>
+                      <input
+                        id="time"
+                        type="time"
+                        value={formData.time}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, time: e.target.value }));
+                          setErrors(prev => ({ ...prev, time: '' }));
+                        }}
+                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                      />
+                    </InputField>
+                    {errors.time && <p className="text-red-500 text-xs mt-1 ml-1">{errors.time}</p>}
                   </div>
-                  {/* ====== MODIFICATION END: Time Input ====== */}
                 </div>
 
                 {/* Description Field */}
@@ -454,7 +486,6 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       value={formData.slots}
                       onChange={(e) => setFormData(prev => ({ ...prev, slots: Number(e.target.value) }))}
                       className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-                      required
                     />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
@@ -464,13 +495,11 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Event Banner</label>
+                  <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">Event Banner</label>
                   <div
                     ref={dropAreaRef}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all ${
-                      formData.preview ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
-                    }`}
+                    className={`flex flex-col items-center justify-center border-2 ${errors.image ? 'border-red-500' : formData.preview ? 'border-gray-200' : 'border-dashed border-gray-300'} rounded-2xl p-6 cursor-pointer transition-all ${formData.preview ? 'bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}`}
                   >
                     {formData.preview ? (
                       <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
@@ -484,12 +513,12 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <ImageIcon className="h-12 w-12 text-gray-400 mb-3" />
+                        <ImageIcon className={`h-12 w-12 ${errors.image ? 'text-red-500' : 'text-gray-400'} mb-3`} />
                         <div className="text-center">
-                          <p className="text-sm font-medium text-gray-600">
-                            <span className="text-gray-700 underline">Upload a file</span> or drag and drop
+                          <p className={`text-sm font-medium ${errors.image ? 'text-red-600' : 'text-gray-600'}`}>
+                            <span className={errors.image ? 'text-red-600 underline' : 'text-gray-700 underline'}>Upload a file</span> or drag and drop
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                          <p className={`text-xs ${errors.image ? 'text-red-400' : 'text-gray-400'} mt-1`}>PNG, JPG, GIF up to 5MB</p>
                         </div>
                       </div>
                     )}
@@ -501,9 +530,9 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       className="sr-only"
                       accept="image/*"
                       onChange={handleImageChange}
-                      required
                     />
                   </div>
+                  {errors.image && <p className="text-red-500 text-xs mt-1 ml-1">{errors.image}</p>}
                 </div>
               </div>
 
