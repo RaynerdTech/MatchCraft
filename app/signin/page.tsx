@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { signIn, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,7 +34,8 @@ const itemVariants: Variants = {
   }),
 };
 
-export default function AuthPage() {
+// Wrapped the main component with Suspense to handle async operations
+function AuthPageContent() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [form, setForm] = useState({
     email: '',
@@ -577,5 +578,14 @@ export default function AuthPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+// Main exported component with Suspense boundary
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 }

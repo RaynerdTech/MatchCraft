@@ -1,11 +1,11 @@
-// app/dashboard/payments/callback/page.tsx
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { Suspense } from 'react';
 
-export default function PaymentCallbackPage() {
+function PaymentCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -33,5 +33,17 @@ export default function PaymentCallbackPage() {
     <div className="flex items-center justify-center h-screen">
       <p className="text-lg font-medium text-purple-700">Redirecting...</p>
     </div>
+  );
+}
+
+export default function PaymentCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-lg font-medium text-purple-700">Processing payment...</p>
+      </div>
+    }>
+      <PaymentCallbackContent />
+    </Suspense>
   );
 }

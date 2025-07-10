@@ -3,13 +3,14 @@
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { Suspense } from 'react';
 
-export default function PaymentVerifyPage() {
+function PaymentVerifyContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const status = searchParams.get('status'); // this is important!
+    const status = searchParams.get('status');
     const eventId = searchParams.get('eventId');
 
     if (!eventId) {
@@ -30,5 +31,17 @@ export default function PaymentVerifyPage() {
     <div className="text-center py-10 text-lg font-medium text-gray-600">
       Redirecting...
     </div>
+  );
+}
+
+export default function PaymentVerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="text-center py-10 text-lg font-medium text-gray-600">
+        Loading payment status...
+      </div>
+    }>
+      <PaymentVerifyContent />
+    </Suspense>
   );
 }
