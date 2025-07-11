@@ -1,35 +1,68 @@
 // app/Home/ProblemSection.tsx
+import {
+  MapPinIcon,
+  CalendarDaysIcon,
+  CreditCardIcon,
+  UserMinusIcon,
+  ChatBubbleBottomCenterTextIcon,
+  TicketIcon,
+} from '@heroicons/react/24/outline';
+
+const problems = [
+  {
+    icon: <MapPinIcon className="h-8 w-8 text-indigo-500" />,
+    text: 'Hard to find where to play locally',
+  },
+  {
+    icon: <CalendarDaysIcon className="h-8 w-8 text-indigo-500" />,
+    text: 'No way to book or reserve a slot online',
+  },
+  {
+    icon: <CreditCardIcon className="h-8 w-8 text-indigo-500" />,
+    text: 'Payment is scattered — bank transfers, cash, or nothing',
+  },
+  {
+    icon: <UserMinusIcon className="h-8 w-8 text-indigo-500" />,
+    text: 'People ghost after saying “I’ll show up”',
+  },
+  {
+    icon: <ChatBubbleBottomCenterTextIcon className="h-8 w-8 text-indigo-500" />,
+    text: 'WhatsApp groups with no proper coordination',
+  },
+  {
+    icon: <TicketIcon className="h-8 w-8 text-indigo-500" />,
+    text: 'No receipts, tickets, or way to track your football life',
+  },
+];
 
 const ProblemSection = () => {
   return (
-    <section id="problems" className="py-16 px-6 md:px-12 bg-white border-t">
-      <div className="max-w-6xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-          The Real Problems Footballers Face
-        </h2>
-        <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto">
-          Before SoccerZone, organizing or joining a football match often felt like chaos.
-        </p>
+    <section id="problems" className="py-20 md:py-28 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 md:px-8">
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+            The Real Problems Footballers Face
+          </h2>
+          <p className="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            Before SoccerZone, organizing or joining a football match often felt
+            like chaos. Here are some of the hurdles we eliminate.
+          </p>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-6 text-left text-gray-800 text-base md:text-lg max-w-4xl mx-auto">
-          <div className="bg-gray-100 rounded-xl p-5 shadow-sm">
-            ❌ Hard to find where to play locally
-          </div>
-          <div className="bg-gray-100 rounded-xl p-5 shadow-sm">
-            ❌ No way to book or reserve a slot online
-          </div>
-          <div className="bg-gray-100 rounded-xl p-5 shadow-sm">
-            ❌ Payment is scattered — bank transfers, cash, or nothing
-          </div>
-          <div className="bg-gray-100 rounded-xl p-5 shadow-sm">
-            ❌ People ghost after saying “I’ll show up”
-          </div>
-          <div className="bg-gray-100 rounded-xl p-5 shadow-sm">
-            ❌ WhatsApp groups with no proper coordination
-          </div>
-          <div className="bg-gray-100 rounded-xl p-5 shadow-sm">
-            ❌ No receipts, tickets, or way to track your football life
-          </div>
+        <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {problems.map((problem, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out flex items-start space-x-4"
+            >
+              <div className="flex-shrink-0 bg-indigo-100 rounded-full p-3">
+                {problem.icon}
+              </div>
+              <p className="text-gray-800 text-base md:text-lg leading-relaxed">
+                {problem.text}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
