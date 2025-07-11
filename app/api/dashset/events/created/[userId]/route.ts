@@ -10,7 +10,7 @@ export async function GET(req: Request, { params }: { params: Params }) {
 
   try {
     const events = await Event.find({ createdBy: userId }).select(
-      "_id title location date time"
+      "_id title location date time slots pricePerPlayer image"
     );
 
     return NextResponse.json(events, { status: 200 });

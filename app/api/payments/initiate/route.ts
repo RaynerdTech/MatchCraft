@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/authOptions";
 import { connectDB } from "@/lib/mongoose";
 import Event from "@/lib/models/Event";
 import Transaction from "@/lib/models/Transaction";
-import { isPopulatedUser } from "@/types/typeGuards"; // ✅ Type guard
+import { isPopulatedUser } from "@/types/typeGuards";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Use type guard to ensure createdBy is populated
     if (!isPopulatedUser(event.createdBy)) {
       return NextResponse.json(
         { error: "Organizer details not available." },
@@ -53,6 +52,20 @@ export async function POST(req: Request) {
     if (!organizer.subaccountCode) {
       return NextResponse.json(
         { error: "Organizer has not set up their payout account." },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Check if user already paid
+    const alreadyPaid = await Transaction.findOne({
+      user: userId,
+      event: eventId,
+      status: "success",
+    });
+
+    if (alreadyPaid) {
+      return NextResponse.json(
+        { error: "You have already paid for this event." },
         { status: 400 }
       );
     }
@@ -72,7 +85,6 @@ export async function POST(req: Request) {
       reference,
     });
 
-    console.log("[NEW_TRANSACTION]", newTransaction);
     await newTransaction.save();
 
     const paystackRes = await fetch(

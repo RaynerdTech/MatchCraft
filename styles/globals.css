@@ -22,3 +22,11 @@ input, button, link, a {
   animation: slideIn 0.3s ease-in-out forwards;
 }
 
+
+/* In your global CSS */
+@media (max-width: 450px) {
+  .event-drawer-mobile {
+    width: 90% !important;
+    max-width: none !important;
+  }
+}

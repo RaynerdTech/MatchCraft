@@ -103,37 +103,43 @@ function NavLinks({ pathname, setIsOpen }: { pathname: string; setIsOpen: (v: bo
     }
   }, [session, userRole]);
 
-  const links = [
-    { label: 'Home', href: '/dashboard', icon: <Home size={20} /> },
-    {
-      label: 'Events',
-      icon: <Calendar size={20} />,
-      submenu: [
-        { label: 'Browse Events', href: '/dashboard/browse-events', icon: <Search size={16} /> },
-        {
-          label: 'Create Event',
-          href: '/dashboard/events',
-          icon: <Plus size={16} />,
-          roles: ['organizer', 'admin'],
-        },
-      ],
-    },
-    { label: 'Teams', href: '/dashboard/teams', icon: <Users size={20} /> },
-    { label: 'Profile', href: '/dashboard/profile', icon: <Settings size={20} /> },
-    {
-      label: 'Payments',
-      href: '/dashboard/payments',
-      icon: <Calendar size={20} />,
-      roles: ['organizer', 'admin'],
-    },
-    {
-      label: 'Verify Ticket',
-      href: '/dashboard/events/verify',
-      icon: <CheckCircle size={20} />,
-      roles: ['organizer', 'admin'],
-    },
-    { label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
-  ];
+const links = [
+  { label: 'Home', href: '/dashboard', icon: <Home size={20} /> },
+  {
+    label: 'Events',
+    icon: <Calendar size={20} />,
+    submenu: [
+      { label: 'Browse Events', href: '/dashboard/browse-events', icon: <Search size={16} /> },
+      {
+        label: 'Create Event',
+        href: '/dashboard/events',
+        icon: <Plus size={16} />,
+        roles: ['organizer', 'admin'],
+      },
+    ],
+  },
+  // 👇 ADD THIS
+  userRole === 'player'
+    ? { label: 'Joined Events', href: '/dashboard/joined-events', icon: <Calendar size={20} /> }
+    : { label: 'Created Events', href: '/dashboard/created-events', icon: <Calendar size={20} /> },
+
+  { label: 'Teams', href: '/dashboard/teams', icon: <Users size={20} /> },
+  { label: 'Profile', href: '/dashboard/profile', icon: <Settings size={20} /> },
+  {
+    label: 'Payments',
+    href: '/dashboard/payments',
+    icon: <Calendar size={20} />,
+    roles: ['organizer', 'admin'],
+  },
+  {
+    label: 'Verify Ticket',
+    href: '/dashboard/events/verify',
+    icon: <CheckCircle size={20} />,
+    roles: ['organizer', 'admin'],
+  },
+  { label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
+];
+
 
   const filteredLinks = links
     .map((link) => {
@@ -222,7 +228,7 @@ function NavLinks({ pathname, setIsOpen }: { pathname: string; setIsOpen: (v: bo
 
       <div className="pt-4 mt-4 border-t border-gray-200">
         <button
-          onClick={() => alert('Sign out logic goes here')}
+          onClick={() => alert('Stay with us! This feature is coming soon.')}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
         >
           <LogOut size={20} className="text-red-400" />

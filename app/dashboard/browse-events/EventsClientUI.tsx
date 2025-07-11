@@ -509,9 +509,9 @@ export default function EventsClientUI() {
                       <MapPin size={14} className="mr-1 sm:mr-2 text-indigo-500 flex-shrink-0" />
                       <span className="truncate">{event.location}</span>
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 line-clamp-3">
-                      {event.description}
-                    </p>
+                  <p className="text-sm md:text-base text-gray-500 mb-3 sm:mb-4 line-clamp-3">
+  {event.description}
+</p>
                   </div>
                   <div className="mt-auto pt-3 sm:pt-4 border-t border-gray-100">
                     <div className="flex justify-between items-center">

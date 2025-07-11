@@ -130,7 +130,7 @@ export default function EventDrawer({
        * `h-full` or `h-screen` is crucial for this layout to work.
       */}
       <div
-        className="fixed top-0 right-0 flex flex-col w-full max-w-screen-sm h-full bg-white shadow-2xl z-50 transition-transform duration-300 ease-in-out animate-slideIn"
+        className="event-drawer-mobile fixed top-0 right-0 flex flex-col w-full max-w-screen-sm h-full bg-white shadow-2xl z-50 transition-transform duration-300 ease-in-out animate-slideIn"
         role="dialog"
         aria-modal="true"
         aria-labelledby="event-title"
