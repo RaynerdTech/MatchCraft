@@ -41,11 +41,11 @@ const ProblemSection = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-8">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-            The Real Problems Footballers Face
-          </h2>
+  Football's Biggest <span className="text-blue-600">Headaches</span>
+</h2>
+
           <p className="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Before SoccerZone, organizing or joining a football match often felt
-            like chaos. Here are some of the hurdles we eliminate.
+            Before SoccerZone, organizing matches was full of frustrations. Here's what we fix:
           </p>
         </div>
 

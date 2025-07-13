@@ -16,8 +16,8 @@ const Footer = () => {
         <div className="flex gap-6 text-sm">
           <Link href="#about" className="hover:text-blue-600 transition">About</Link>
           <Link href="#features" className="hover:text-blue-600 transition">Features</Link>
-          <Link href="/events" className="hover:text-blue-600 transition">Browse Events</Link>
-          <Link href="/auth/login" className="hover:text-blue-600 transition">Get Started</Link>
+          <Link href="/dashboard/browse-events" className="hover:text-blue-600 transition">Browse Events</Link>
+          <Link href="/signin" className="hover:text-blue-600 transition">Get Started</Link>
         </div>
 
         {/* Right - Credit */}

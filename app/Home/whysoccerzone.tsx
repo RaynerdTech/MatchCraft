@@ -10,21 +10,25 @@ import {
   MapPin,
   ShieldCheck,
   History,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  Trophy,
+  Frown,
+  Smile
 } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
-// A custom component for the gradient border hover effect
 const BentoCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <motion.div
     variants={{
       hidden: { opacity: 0, y: 20 },
       visible: { opacity: 1, y: 0 }
     }}
-    className={`relative p-0.5 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/20 via-transparent to-transparent group ${className}`}
+    className={`relative p-0.5 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent group ${className}`}
   >
-    <div className="absolute inset-0 -z-10 bg-gradient-to-br from-blue-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-    <div className="bg-white/60 backdrop-blur-lg rounded-[15px] h-full w-full p-6">
+    <div className="absolute inset-0 -z-10 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="bg-white/80 backdrop-blur-lg rounded-[15px] h-full w-full p-6">
       {children}
     </div>
   </motion.div>
@@ -46,11 +50,11 @@ const WhySoccerZone = () => {
   };
 
   const problems = [
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Difficulty finding where to play" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "No easy way to book or join matches" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Frustration organizing games — players bail, payments are messy" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Just WhatsApp groups and word of mouth — no structure" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "No proof of participation — no tickets, no history" }
+    { icon: <Frown className="w-5 h-5 text-red-500" />, text: "Last-minute cancellations" },
+    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Chasing payments in cash" },
+    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "No-show players ruining games" },
+    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Disorganized WhatsApp groups" },
+    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "No record of past matches" }
   ];
 
   const solutions = [
@@ -92,12 +96,38 @@ const WhySoccerZone = () => {
     },
   ];
 
+  const timeline = [
+    {
+      icon: <Frown className="w-6 h-6 text-red-500" />,
+      title: "The Frustration",
+      description: "Struggling to find reliable games and players",
+      image: "/images/timeline-frustration.svg"
+    },
+    {
+      icon: <Calendar className="w-6 h-6 text-blue-500" />,
+      title: "The Idea",
+      description: "Why not build a platform for footballers?",
+      image: "/images/timeline-idea.svg"
+    },
+    {
+      icon: <Trophy className="w-6 h-6 text-green-500" />,
+      title: "The Solution",
+      description: "SoccerZone was born to organize the chaos",
+      image: "/images/timeline-solution.svg"
+    },
+    {
+      icon: <Smile className="w-6 h-6 text-blue-500" />,
+      title: "The Community",
+      description: "Thousands of games played every week",
+      image: "/images/timeline-community.svg"
+    }
+  ];
+
   return (
-    <section id="about" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
-      {/* Immersive Aurora Background */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-200 rounded-full filter blur-3xl opacity-20 animate-pulse" />
-        <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-green-200 rounded-full filter blur-3xl opacity-20 animate-pulse animation-delay-4000" />
+    <section id="about" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Pitch Background */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-50 to-white">
+        <div className="absolute inset-0 opacity-10 bg-[url('/images/pitch-lines.svg')] bg-cover bg-center"></div>
       </div>
 
       <div className="max-w-7xl mx-auto">
@@ -110,25 +140,24 @@ const WhySoccerZone = () => {
           className="text-center mb-16"
         >
           <motion.div variants={fadeIn} className="mb-4">
-            <span className="inline-block px-4 py-1.5 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
-              Our Mission
+            <span className="inline-block px-4 py-1.5 text-sm font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+              Football Revolution
             </span>
           </motion.div>
           
           <motion.h2 variants={fadeIn} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
-            From Chaos to Community.
+            From <span className="text-red-500">Frustration</span> to <span className="text-blue-600">Freedom</span>
           </motion.h2>
           
           <motion.p variants={fadeIn} className="text-lg text-gray-600 max-w-3xl mx-auto mt-6">
-            We saw the passion for football in Nigeria getting lost in disorganization. 
-            <span className="text-blue-600 font-semibold"> SoccerZone</span> is our answer.
+            The journey from chaotic pick-up games to organized football bliss
           </motion.p>
         </motion.div>
 
-        {/* Main Grid: Sticky Narrative + Scrolling Solutions */}
+        {/* Main Grid */}
         <div className="lg:grid lg:grid-cols-5 lg:gap-12 lg:items-start">
           
-          {/* Left Column (Sticky) */}
+          {/* Left Column - Founder's Story */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -136,37 +165,81 @@ const WhySoccerZone = () => {
             variants={staggerContainer}
             className="lg:col-span-2 lg:sticky lg:top-24 space-y-8"
           >
-            {/* The Problems */}
-            <div className="bg-white/50 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-gray-200/80">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">The Common Headaches</h3>
-              <ul className="space-y-3">
-                {problems.map((problem, index) => (
-                  <motion.li key={index} variants={fadeIn} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">{problem.icon}</div>
-                    <span className="text-gray-700">{problem.text}</span>
-                  </motion.li>
-                ))}
-              </ul>
-            </div>
-
             {/* Founder's Quote */}
-            <div className="bg-white/50 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-gray-200/80">
-               <p className="text-gray-700 leading-relaxed italic">
-                 "As a developer and footballer, I lived these frustrations. I built <strong className="text-blue-600 not-italic font-semibold">SoccerZone</strong> to bring the <strong className="text-blue-600 not-italic font-semibold">structure, trust, and ease</strong> our beautiful game deserves."
-               </p>
-               <div className="mt-4 flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                   AR
-                 </div>
-                 <div>
-                  <p className="font-semibold text-gray-900">Abdulrahmon</p>
-                  <p className="text-sm text-gray-500">Founder of SoccerZone</p>
-                 </div>
-               </div>
-            </div>
+            <BentoCard className="bg-gradient-to-br from-blue-600/10 to-green-500/10">
+              <div className="relative h-full">
+                <div className="absolute -top-4 -left-4 w-16 h-16">
+                  <Image
+                    src="/images/football-icon.png"
+                    alt="Football icon"
+                    width={64}
+                    height={64}
+                    className="opacity-20"
+                  />
+                </div>
+                <blockquote className="relative z-10 text-2xl font-medium text-gray-800 leading-relaxed">
+                  "I built SoccerZone because I was tired of inconsistent games. Football deserves <span className="text-blue-600 font-bold">structure</span> and <span className="text-blue-600 font-bold">respect</span>."
+                </blockquote>
+                <div className="mt-8 flex items-center gap-4">
+                  <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-blue-500">
+                    <Image
+                      src="/images/founder-ray.jpg"
+                      alt="Ray, Founder of SoccerZone"
+                      width={56}
+                      height={56}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Ray</p>
+                    <p className="text-sm text-gray-500">Founder & Football Addict</p>
+                    <div className="mt-1 flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Trophy key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </BentoCard>
+
+            {/* Timeline */}
+            <BentoCard>
+              <h3 className="text-xl font-bold text-gray-800 mb-6">Our Journey</h3>
+              <div className="space-y-6">
+                {timeline.map((item, index) => (
+                  <motion.div 
+                    key={index}
+                    variants={fadeIn}
+                    className="flex gap-4"
+                  >
+                    <div className="flex-shrink-0 relative">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                        {item.icon}
+                      </div>
+                      {index < timeline.length - 1 && (
+                        <div className="absolute left-1/2 top-full w-0.5 h-6 bg-blue-200 transform -translate-x-1/2"></div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{item.title}</h4>
+                      <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                      <div className="mt-2 w-16 h-16 relative">
+                        <Image
+                          src={item.image}
+                          alt=""
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </BentoCard>
           </motion.div>
 
-          {/* Right Column (Solutions Bento Grid) */}
+          {/* Right Column - Solutions */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -178,9 +251,14 @@ const WhySoccerZone = () => {
               {solutions.map((solution, index) => (
                 <BentoCard key={index} className={solution.colSpan}>
                   <div className="flex flex-col h-full">
-                    <div className="mb-4">{solution.icon}</div>
-                    <h4 className="text-lg font-bold text-gray-900 mb-1">{solution.title}</h4>
-                    <p className="text-gray-600 text-sm flex-1">{solution.description}</p>
+                    <div className="mb-4 p-2 w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                      {solution.icon}
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">{solution.title}</h4>
+                    <p className="text-gray-600 flex-1">{solution.description}</p>
+                    <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-end">
+                      <ChevronRight className="w-5 h-5 text-blue-600" />
+                    </div>
                   </div>
                 </BentoCard>
               ))}
