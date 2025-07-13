@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const userId = session?.user?._id;
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Login or create an account to join event" }, { status: 401 });
     }
 
     const { eventId } = await req.json();

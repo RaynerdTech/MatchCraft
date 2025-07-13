@@ -244,7 +244,7 @@ const HeroSection = () => {
 
             <motion.div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start" variants={fadeInUp}>
               <Link
-                href="/signin"
+                href="/dashboard/browse-events"
                 className="inline-flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-bold transition-all duration-300 transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 shadow-xl hover:shadow-blue-500/30 group hover-glow"
               >
                 <span>Join a Match</span>
@@ -253,7 +253,7 @@ const HeroSection = () => {
                 </span>
               </Link>
               <Link
-                href="/dashboard/create-event"
+                href="/signin"
                 className="inline-flex items-center justify-center gap-3 bg-transparent border-2 border-white/80 hover:border-white text-white px-8 py-4 rounded-full text-lg font-bold transition-all duration-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 backdrop-blur-sm hover-glow"
               >
                 <span>Organize Event</span>

@@ -9,7 +9,7 @@ import type { Variants } from 'framer-motion';
 // Constants for dropdown options
 const skillOptions = ['beginner', 'intermediate', 'advanced'];
 const positionOptions = ['goalkeeper', 'defender', 'midfielder', 'forward'];
-const roleOptions = ['player', 'organizer', 'admin'];
+const roleOptions = ['player', 'organizer'];
 
 // Animation variants for consistent motion
 const containerVariants: Variants = {
