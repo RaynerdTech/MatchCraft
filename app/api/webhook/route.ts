@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Transaction from "@/lib/models/Transaction";
 import Event from "@/lib/models/Event";
+import Team from "@/lib/models/Team"; // ✅ added
 import crypto from "crypto";
 import { isPopulatedUser } from "@/types/typeGuards";
-import mongoose from "mongoose"; // 👈 Add this line
-
+import mongoose from "mongoose";
 
 export const config = {
   api: {
@@ -49,7 +49,6 @@ export async function POST(req: Request) {
     // ✅ Update transaction
     transaction.status = "success";
 
-    // ✅ Save secure QR payload
     const qrPayload = {
       userId: isPopulatedUser(transaction.user)
         ? transaction.user._id.toString()
@@ -62,7 +61,7 @@ export async function POST(req: Request) {
     transaction.qrCodeData = JSON.stringify(qrPayload);
     await transaction.save();
 
-    // ✅ Add user to event participants
+    // ✅ Update event participants
     const event = await Event.findById(transaction.event);
     if (!event) {
       return new NextResponse("Event not found", { status: 404 });
@@ -80,15 +79,34 @@ export async function POST(req: Request) {
       existing.paid = true;
       existing.reference = transaction.reference;
     } else {
-  event.participants.push({
-  userId: new mongoose.Types.ObjectId(userId as string), // 👈 cast to string
+      event.participants.push({
+        userId: new mongoose.Types.ObjectId(userId as string),
+        paid: true,
+        reference: transaction.reference,
+      });
+    }
 
-  paid: true,
-  reference: transaction.reference,
-});
-
-}
     await event.save();
+
+    // ✅ Check if user is in a team for that event
+    const team = await Team.findOne({
+      event: transaction.event,
+      members: {
+        $elemMatch: {
+          userId: userId,
+        },
+      },
+    });
+
+    if (team) {
+      const member = team.members.find(
+        (m: any) => m.userId.toString() === userId.toString()
+      );
+      if (member) {
+        member.paid = true;
+      }
+      await team.save();
+    }
 
     return new NextResponse("Payment processed", { status: 200 });
   } catch (err: any) {

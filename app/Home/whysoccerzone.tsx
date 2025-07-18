@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import {
   XCircle,
   CheckCircle2,
@@ -14,16 +14,22 @@ import {
   Calendar,
   Trophy,
   Frown,
-  Smile
-} from 'lucide-react';
-import Image from 'next/image';
-import React from 'react';
+  Smile,
+} from "lucide-react";
+import Image from "next/image";
+import React from "react";
 
-const BentoCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+const BentoCard = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
   <motion.div
     variants={{
       hidden: { opacity: 0, y: 20 },
-      visible: { opacity: 1, y: 0 }
+      visible: { opacity: 1, y: 0 },
     }}
     className={`relative p-0.5 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent group ${className}`}
   >
@@ -46,53 +52,71 @@ const WhySoccerZone = () => {
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
   const problems = [
-    { icon: <Frown className="w-5 h-5 text-red-500" />, text: "Last-minute cancellations" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Chasing payments in cash" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "No-show players ruining games" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "Disorganized WhatsApp groups" },
-    { icon: <XCircle className="w-5 h-5 text-red-500" />, text: "No record of past matches" }
+    {
+      icon: <Frown className="w-5 h-5 text-red-500" />,
+      text: "Last-minute cancellations",
+    },
+    {
+      icon: <XCircle className="w-5 h-5 text-red-500" />,
+      text: "Chasing payments in cash",
+    },
+    {
+      icon: <XCircle className="w-5 h-5 text-red-500" />,
+      text: "No-show players ruining games",
+    },
+    {
+      icon: <XCircle className="w-5 h-5 text-red-500" />,
+      text: "Disorganized WhatsApp groups",
+    },
+    {
+      icon: <XCircle className="w-5 h-5 text-red-500" />,
+      text: "No record of past matches",
+    },
   ];
 
   const solutions = [
     {
       icon: <MapPin className="w-8 h-8 text-blue-600" />,
       title: "Discover & Join",
-      description: "Find and join football events happening near you in just a few taps.",
-      colSpan: 'lg:col-span-2'
+      description:
+        "Find and join football events happening near you in just a few taps.",
+      colSpan: "lg:col-span-2",
     },
     {
       icon: <Users className="w-8 h-8 text-blue-600" />,
       title: "Organize with Ease",
       description: "Create, manage, and promote your own matches effortlessly.",
-      colSpan: 'lg:col-span-1'
+      colSpan: "lg:col-span-1",
     },
     {
       icon: <Wallet className="w-8 h-8 text-blue-600" />,
       title: "Automated Payments",
-      description: "Secure online payments with automated splits for organizers.",
-      colSpan: 'lg:col-span-1'
+      description:
+        "Secure online payments with automated splits for organizers.",
+      colSpan: "lg:col-span-1",
     },
     {
       icon: <QrCode className="w-8 h-8 text-blue-600" />,
       title: "Digital Tickets",
       description: "Get digital tickets with QR codes for seamless check-ins.",
-      colSpan: 'lg:col-span-1'
+      colSpan: "lg:col-span-1",
     },
     {
       icon: <ShieldCheck className="w-8 h-8 text-blue-600" />,
       title: "Verified Players",
-      description: "Track attendance and build a community of reliable players.",
-      colSpan: 'lg:col-span-1'
+      description:
+        "Track attendance and build a community of reliable players.",
+      colSpan: "lg:col-span-1",
     },
     {
       icon: <History className="w-8 h-8 text-blue-600" />,
       title: "Build Your Match History",
       description: "Keep a permanent record of every game you play.",
-      colSpan: 'lg:col-span-2'
+      colSpan: "lg:col-span-2",
     },
   ];
 
@@ -101,30 +125,33 @@ const WhySoccerZone = () => {
       icon: <Frown className="w-6 h-6 text-red-500" />,
       title: "The Frustration",
       description: "Struggling to find reliable games and players",
-      image: "/images/timeline-frustration.svg"
+      image: "/images/timeline-frustration.svg",
     },
     {
       icon: <Calendar className="w-6 h-6 text-blue-500" />,
       title: "The Idea",
       description: "Why not build a platform for footballers?",
-      image: "/images/timeline-idea.svg"
+      image: "/images/timeline-idea.svg",
     },
     {
       icon: <Trophy className="w-6 h-6 text-green-500" />,
       title: "The Solution",
-      description: "SoccerZone was born to organize the chaos",
-      image: "/images/timeline-solution.svg"
+      description: "SoccerHub was born to organize the chaos",
+      image: "/images/timeline-solution.svg",
     },
     {
       icon: <Smile className="w-6 h-6 text-blue-500" />,
       title: "The Community",
       description: "Thousands of games played every week",
-      image: "/images/timeline-community.svg"
-    }
+      image: "/images/timeline-community.svg",
+    },
   ];
 
   return (
-    <section id="about" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section
+      id="about"
+      className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+    >
       {/* Pitch Background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-50 to-white">
         <div className="absolute inset-0 opacity-10 bg-[url('/images/pitch-lines.svg')] bg-cover bg-center"></div>
@@ -144,19 +171,25 @@ const WhySoccerZone = () => {
               Football Revolution
             </span>
           </motion.div>
-          
-          <motion.h2 variants={fadeIn} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
-            From <span className="text-red-500">Frustration</span> to <span className="text-blue-600">Freedom</span>
+
+          <motion.h2
+            variants={fadeIn}
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight"
+          >
+            From <span className="text-red-500">Frustration</span> to{" "}
+            <span className="text-blue-600">Freedom</span>
           </motion.h2>
-          
-          <motion.p variants={fadeIn} className="text-lg text-gray-600 max-w-3xl mx-auto mt-6">
+
+          <motion.p
+            variants={fadeIn}
+            className="text-lg text-gray-600 max-w-3xl mx-auto mt-6"
+          >
             The journey from chaotic pick-up games to organized football bliss
           </motion.p>
         </motion.div>
 
         {/* Main Grid */}
         <div className="lg:grid lg:grid-cols-5 lg:gap-12 lg:items-start">
-          
           {/* Left Column - Founder's Story */}
           <motion.div
             initial="hidden"
@@ -178,13 +211,16 @@ const WhySoccerZone = () => {
                   />
                 </div>
                 <blockquote className="relative z-10 text-2xl font-medium text-gray-800 leading-relaxed">
-                  "I built SoccerZone because I was tired of inconsistent games. Football deserves <span className="text-blue-600 font-bold">structure</span> and <span className="text-blue-600 font-bold">respect</span>."
+                  "I built SoccerHub because I was tired of inconsistent games.
+                  Football deserves{" "}
+                  <span className="text-blue-600 font-bold">structure</span> and{" "}
+                  <span className="text-blue-600 font-bold">respect</span>."
                 </blockquote>
                 <div className="mt-8 flex items-center gap-4">
                   <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-blue-500">
                     <Image
                       src="/images/founder-ray.jpg"
-                      alt="Ray, Founder of SoccerZone"
+                      alt="Ray, Founder of SoccerHub"
                       width={56}
                       height={56}
                       className="object-cover"
@@ -192,10 +228,15 @@ const WhySoccerZone = () => {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900">Ray</p>
-                    <p className="text-sm text-gray-500">Founder & Football Addict</p>
+                    <p className="text-sm text-gray-500">
+                      Founder & Football Addict
+                    </p>
                     <div className="mt-1 flex gap-1">
                       {[...Array(5)].map((_, i) => (
-                        <Trophy key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <Trophy
+                          key={i}
+                          className="w-4 h-4 text-yellow-500 fill-yellow-500"
+                        />
                       ))}
                     </div>
                   </div>
@@ -205,10 +246,12 @@ const WhySoccerZone = () => {
 
             {/* Timeline */}
             <BentoCard>
-              <h3 className="text-xl font-bold text-gray-800 mb-6">Our Journey</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-6">
+                Our Journey
+              </h3>
               <div className="space-y-6">
                 {timeline.map((item, index) => (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     variants={fadeIn}
                     className="flex gap-4"
@@ -222,8 +265,12 @@ const WhySoccerZone = () => {
                       )}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">{item.title}</h4>
-                      <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                      <h4 className="font-semibold text-gray-900">
+                        {item.title}
+                      </h4>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {item.description}
+                      </p>
                       <div className="mt-2 w-16 h-16 relative">
                         <Image
                           src={item.image}
@@ -254,8 +301,12 @@ const WhySoccerZone = () => {
                     <div className="mb-4 p-2 w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
                       {solution.icon}
                     </div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-2">{solution.title}</h4>
-                    <p className="text-gray-600 flex-1">{solution.description}</p>
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">
+                      {solution.title}
+                    </h4>
+                    <p className="text-gray-600 flex-1">
+                      {solution.description}
+                    </p>
                     <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-end">
                       <ChevronRight className="w-5 h-5 text-blue-600" />
                     </div>

@@ -20,6 +20,12 @@ const InputField = ({ icon: Icon, children, error }: { icon: React.ElementType, 
   </div>
 );
 
+const timeToMinutes = (timeStr: string): number => {
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
 // --- Main Component ---
 export default function CreateEventForm({ userId, onSuccess }: Props) {
   const router = useRouter();
@@ -36,11 +42,14 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     location: '',
     date: '',
     time: '',
+    endTime: '',
     description: '',
     pricePerPlayer: 0,
     slots: 10,
     image: null as File | null,
-    preview: null as string | null
+    preview: null as string | null,
+    teamOnly: false, // ✅ New
+    allowFreePlayersIfTeamIncomplete: false, // ✅ New
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -142,6 +151,17 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     if (!formData.location) newErrors.location = "Location is required";
     if (!formData.date) newErrors.date = "Please select a date";
     if (!formData.time) newErrors.time = "Please select a time";
+    if (!formData.endTime) newErrors.endTime = "Please select an end time";
+    // Replace the time comparison in validateForm with:
+ if (formData.time && formData.endTime) {
+      const startMinutes = timeToMinutes(formData.time);
+      const endMinutes = timeToMinutes(formData.endTime);
+      
+      if (startMinutes >= endMinutes) {
+        newErrors.endTime = "End time must be after start time";
+      }
+    }
+
     if (!formData.preview) newErrors.image = "Please upload an event banner"; // Changed to check preview instead of image File object
 
     setErrors(newErrors);
@@ -256,11 +276,14 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
           location: formData.location,
           date: formData.date,
           time: formData.time,
+          endTime: formData.endTime,
           description: formData.description,
           pricePerPlayer: formData.pricePerPlayer,
           slots: formData.slots,
           imageBase64,
           userId,
+          teamOnly: formData.teamOnly,
+          allowFreePlayersIfTeamIncomplete: formData.allowFreePlayersIfTeamIncomplete,
         }),
       });
 
@@ -279,11 +302,14 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
         location: '',
         date: '',
         time: '',
+        endTime: '',
         description: '',
         pricePerPlayer: 0,
         slots: 10,
         image: null,
         preview: null,
+        teamOnly: formData.teamOnly,
+        allowFreePlayersIfTeamIncomplete: formData.allowFreePlayersIfTeamIncomplete,
       });
 
       // Show success modal
@@ -412,22 +438,61 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                     {errors.date && <p className="text-red-500 text-xs mt-1 ml-1">{errors.date}</p>}
                   </div>
 
-                  <div>
-                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                    <InputField icon={Clock} error={!!errors.time}>
-                      <input
-                        id="time"
-                        type="time"
-                        value={formData.time}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, time: e.target.value }));
-                          setErrors(prev => ({ ...prev, time: '' }));
-                        }}
-                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-                      />
-                    </InputField>
-                    {errors.time && <p className="text-red-500 text-xs mt-1 ml-1">{errors.time}</p>}
-                  </div>
+                 <div>
+          <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+          <InputField icon={Clock} error={!!errors.time}>
+            <input
+              id="time"
+              type="time"
+              value={formData.time}
+              onChange={(e) => {
+                const newTime = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  time: newTime,
+                  // Clear end time if it's now invalid
+                  ...(timeToMinutes(newTime) >= timeToMinutes(prev.endTime) 
+                    ? { endTime: '' } 
+                    : {})
+                }));
+                setErrors(prev => ({
+                  ...prev,
+                  time: '',
+                  endTime: timeToMinutes(newTime) >= timeToMinutes(formData.endTime)
+                    ? "End time must be after start time"
+                    : prev.endTime
+                }));
+              }}
+              className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+            />
+          </InputField>
+          {errors.time && <p className="text-red-500 text-xs mt-1 ml-1">{errors.time}</p>}
+        </div>
+
+        {/* End Time Field */}
+        <div>
+          <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+          <InputField icon={Clock} error={!!errors.endTime}>
+            <input
+              id="endTime"
+              type="time"
+              value={formData.endTime}
+              onChange={(e) => {
+                const newEndTime = e.target.value;
+                setFormData(prev => ({ ...prev, endTime: newEndTime }));
+                setErrors(prev => ({
+                  ...prev,
+                  endTime: timeToMinutes(formData.time) >= timeToMinutes(newEndTime)
+                    ? "End time must be after start time"
+                    : ''
+                }));
+              }}
+              className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+            />
+          </InputField>
+          {errors.endTime && <p className="text-red-500 text-xs mt-1 ml-1">{errors.endTime}</p>}
+        </div>
+    
                 </div>
 
                 {/* Description Field */}
@@ -492,6 +557,40 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                     Maximum number of participants for this event
                   </p>
                 </div>
+
+                {/* Team-Only Toggle */}
+<div className="flex items-center space-x-2">
+  <input
+    type="checkbox"
+    id="teamOnly"
+    checked={formData.teamOnly}
+    onChange={(e) => setFormData(prev => ({ ...prev, teamOnly: e.target.checked }))}
+    className="w-5 h-5"
+  />
+  <label htmlFor="teamOnly" className="text-sm text-gray-700">Team-only event (players must join in teams)</label>
+</div>
+
+{/* Allow Free Players Fallback */}
+{formData.teamOnly && (
+  <div className="flex items-center space-x-2 ml-6 mt-2">
+    <input
+      type="checkbox"
+      id="allowFreePlayers"
+      checked={formData.allowFreePlayersIfTeamIncomplete}
+      onChange={(e) =>
+        setFormData(prev => ({
+          ...prev,
+          allowFreePlayersIfTeamIncomplete: e.target.checked,
+        }))
+      }
+      className="w-5 h-5"
+    />
+    <label htmlFor="allowFreePlayers" className="text-sm text-gray-700">
+      Allow free players to fill team slots if team incomplete
+    </label>
+  </div>
+)}
+
 
                 {/* Image Upload */}
                 <div>

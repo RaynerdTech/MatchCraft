@@ -6,7 +6,6 @@ import { SessionProvider } from 'next-auth/react';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

@@ -6,32 +6,34 @@ import {
   UserMinusIcon,
   ChatBubbleBottomCenterTextIcon,
   TicketIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
 const problems = [
   {
     icon: <MapPinIcon className="h-8 w-8 text-indigo-500" />,
-    text: 'Hard to find where to play locally',
+    text: "Hard to find where to play locally",
   },
   {
     icon: <CalendarDaysIcon className="h-8 w-8 text-indigo-500" />,
-    text: 'No way to book or reserve a slot online',
+    text: "No way to book or reserve a slot online",
   },
   {
     icon: <CreditCardIcon className="h-8 w-8 text-indigo-500" />,
-    text: 'Payment is scattered — bank transfers, cash, or nothing',
+    text: "Payment is scattered — bank transfers, cash, or nothing",
   },
   {
     icon: <UserMinusIcon className="h-8 w-8 text-indigo-500" />,
-    text: 'People ghost after saying “I’ll show up”',
+    text: "People ghost after saying “I’ll show up”",
   },
   {
-    icon: <ChatBubbleBottomCenterTextIcon className="h-8 w-8 text-indigo-500" />,
-    text: 'WhatsApp groups with no proper coordination',
+    icon: (
+      <ChatBubbleBottomCenterTextIcon className="h-8 w-8 text-indigo-500" />
+    ),
+    text: "WhatsApp groups with no proper coordination",
   },
   {
     icon: <TicketIcon className="h-8 w-8 text-indigo-500" />,
-    text: 'No receipts, tickets, or way to track your football life',
+    text: "No receipts, tickets, or way to track your football life",
   },
 ];
 
@@ -41,11 +43,12 @@ const ProblemSection = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-8">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-  Football's Biggest <span className="text-blue-600">Headaches</span>
-</h2>
+            Football's Biggest <span className="text-blue-600">Headaches</span>
+          </h2>
 
           <p className="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Before SoccerZone, organizing matches was full of frustrations. Here's what we fix:
+            Before SoccerHub, organizing matches was full of frustrations.
+            Here's what we fix:
           </p>
         </div>
 

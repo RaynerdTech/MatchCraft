@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const CallToAction = () => {
   const container = {
@@ -23,7 +23,7 @@ const CallToAction = () => {
       opacity: 1,
       transition: {
         duration: 0.6,
-        ease: 'easeOut' as const
+        ease: "easeOut" as const,
       },
     },
   };
@@ -62,7 +62,7 @@ const CallToAction = () => {
             transition={{
               duration: ball.duration,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: "easeInOut",
             }}
           >
             ⚽
@@ -96,21 +96,22 @@ const CallToAction = () => {
         variants={container}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: '-100px' }}
+        viewport={{ once: true, margin: "-100px" }}
         className="max-w-6xl mx-auto relative z-10"
       >
         <motion.h2
           variants={item}
           className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
         >
-          Ready to Play <span className="text-yellow-300">Smarter</span> Football?
+          Ready to Play <span className="text-yellow-300">Smarter</span>{" "}
+          Football?
         </motion.h2>
 
         <motion.p
           variants={item}
           className="text-xl sm:text-2xl mb-10 max-w-3xl mx-auto opacity-90 leading-relaxed"
         >
-          Join thousands of players and organizers using SoccerZone to connect,
+          Join thousands of players and organizers using SoccerHub to connect,
           play, and manage games — the easy way.
         </motion.p>
 
@@ -130,8 +131,6 @@ const CallToAction = () => {
             </span>
             <span className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-400 opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
           </Link>
-
-      
         </motion.div>
 
         {/* Trust indicators */}
@@ -146,8 +145,10 @@ const CallToAction = () => {
                   key={i}
                   className="w-8 h-8 rounded-full bg-white/20 border-2 border-white/30"
                   style={{
-                    backgroundImage: `url(https://i.pravatar.cc/150?img=${i + 10})`,
-                    backgroundSize: 'cover',
+                    backgroundImage: `url(https://i.pravatar.cc/150?img=${
+                      i + 10
+                    })`,
+                    backgroundSize: "cover",
                   }}
                 />
               ))}

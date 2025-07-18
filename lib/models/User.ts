@@ -12,7 +12,7 @@ export interface IUser extends Document {
   onboardingComplete: boolean;
   role: 'player' | 'organizer' | 'admin';
   isVerified?: boolean;
-  teams?: mongoose.Types.ObjectId[];
+  // teams?: mongoose.Types.ObjectId[];
   subaccountCode?: string | null;
   bankSetupComplete: boolean;
   bankName?: string | null;
@@ -53,7 +53,7 @@ const UserSchema = new Schema<IUser>(
       default: 'player',
     },
     isVerified: Boolean,
-    teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
+    // teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
     subaccountCode: {
       type: String,
       default: null,

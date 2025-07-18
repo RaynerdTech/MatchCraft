@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Event from "@/lib/models/Event";
 import User from "@/lib/models/User";
+import Team from "@/lib/models/Team";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { uploadImageToCloudinary } from "@/utils/uploadImageToCloudinary";
 
+// ==================== CREATE EVENT ====================
 export async function POST(req: NextRequest) {
   await connectDB();
 
@@ -26,10 +28,13 @@ export async function POST(req: NextRequest) {
       description,
       date,
       time,
+      endTime, // Add endTime to the destructured properties
       location,
       imageBase64,
       pricePerPlayer,
       slots,
+      teamOnly = false,
+      allowFreePlayersIfTeamIncomplete = true,
     } = body;
 
     if (!slots || slots <= 0) {
@@ -52,11 +57,14 @@ export async function POST(req: NextRequest) {
       description,
       date,
       time,
+      endTime, // Include endTime in the created event
       location,
       pricePerPlayer: pricePerPlayer || 0,
       slots,
       createdBy: user._id,
       image: imageUrl,
+      teamOnly,
+      allowFreePlayersIfTeamIncomplete,
     });
 
     return NextResponse.json(newEvent, { status: 201 });
@@ -68,27 +76,30 @@ export async function POST(req: NextRequest) {
 
 export const dynamic = "force-dynamic";
 
-type ExtendedEvent = {
-  _id: string;
-  title: string;
-  date: Date;
-  time: string;
-  location: string;
-  image?: string;
-  pricePerPlayer: number;
-  participants: any[];
-  slots: number;
-  createdBy: { name: string };
-  participantsCount: number;
-  availableSlots: number;
-  isAvailable: boolean;
+// ==================== FETCH EVENTS WITH ENHANCED TEAM LOGIC ====================
+// Add this helper function at the top of your API file
+const getEventStatus = (eventDate: string | Date, eventTime: string, eventEndTime: string) => {
+  const now = new Date();
+  
+  // Convert date to string if it's a Date object
+  const dateStr = typeof eventDate === 'string' 
+    ? eventDate 
+    : eventDate.toISOString().split('T')[0];
+  
+  const eventStart = new Date(`${dateStr}T${eventTime}`);
+  const eventEnd = new Date(`${dateStr}T${eventEndTime}`);
+  
+  if (now < eventStart) return 'not_started';
+  if (now >= eventStart && now < eventEnd) return 'ongoing';
+  return 'ended';
 };
 
 export async function GET(req: NextRequest) {
   await connectDB();
 
   const { searchParams } = new URL(req.url);
-
+  const eventStatus = searchParams.get("eventStatus");
+  // Query parameters
   const search = searchParams.get("search")?.trim().toLowerCase();
   const location = searchParams.get("location")?.trim().toLowerCase();
   const date = searchParams.get("date");
@@ -96,7 +107,9 @@ export async function GET(req: NextRequest) {
   const sort = searchParams.get("sort") || "date:1";
   const slots = searchParams.get("slots");
   const slotStatus = searchParams.get("slotStatus");
+  const teamOnly = searchParams.get("teamOnly"); // New filter parameter
 
+  // Build query
   const query: any = {};
   const urlParams = new URLSearchParams();
 
@@ -135,48 +148,124 @@ export async function GET(req: NextRequest) {
     urlParams.append("slotStatus", slotStatus);
   }
 
+  // Add teamOnly filter to query if provided
+ if (teamOnly) {
+  // Filter for events that are strictly team-only OR hybrid (team-focused)
+  query.$or = [
+    { teamOnly: true },
+    { 
+      teamOnly: false,
+      allowFreePlayersIfTeamIncomplete: true 
+    }
+  ];
+  urlParams.append('teamOnly', teamOnly);
+  }
+  
+
+  // Sort options
   const [sortField, sortOrder] = sort.split(":");
   const sortOptions: any = {};
   sortOptions[sortField] = parseInt(sortOrder);
   urlParams.append("sort", sort);
 
+  console.log("Filtering for team events. Query:", {
+  $or: [
+    { teamOnly: true },
+    { 
+      teamOnly: false,
+      allowFreePlayersIfTeamIncomplete: true 
+    }
+  ]
+});
+
+const events = await Event.find(query).sort(sortOptions).lean();
+console.log(`Found ${events.length} team/hybrid events`);
+
   try {
-    let events = await Event.find(query)
+    // Fetch base events
+    const events = await Event.find(query)
       .sort(sortOptions)
       .populate("createdBy", "name")
       .lean();
 
-    const enrichedEvents = events.map((event) => {
-      const participantsCount = event.participants?.length || 0;
-      const availableSlots = event.slots - participantsCount;
-      return {
-        ...event,
-        participantsCount,
-        availableSlots,
-        isAvailable: availableSlots > 0,
-      };
-    });
+    // Enrich events with availability data
+    const enrichedEvents = await Promise.all(
+      events.map(async (event) => {
+        const status = getEventStatus(event.date, event.time, event.endTime);
+        // Count paid participants (individual slots)
+        const paidParticipants = event.participants?.filter(p => p.paid)?.length || 0;
+        
+        // Get ALL teams for this event (regardless of status)
+        const allTeams = await Team.find({ event: event._id }).lean();
+        const totalTeams = allTeams.length;
+        
+        // Count complete teams (where all members have accepted AND paid)
+        const completeTeams = allTeams.filter(team => {
+          return team.members.every(member => member.accepted && member.paid);
+        }).length;
 
+        // Determine availability based on event type
+        let isAvailable = true;
+        let soldOutReason = null;
+        let availableSlots = 0;
+        
+        if (event.teamOnly) {
+          // Team-only: Sold out when 2 teams exist
+          isAvailable = totalTeams < 2;
+          availableSlots = 2 - totalTeams;
+          if (!isAvailable) soldOutReason = "Maximum teams reached (2)";
+        } else if (event.allowFreePlayersIfTeamIncomplete) {
+          // Hybrid: 
+          // - Individual slots: event.slots - paidParticipants
+          // - Team slots: 2 - totalTeams
+          const individualAvailable = event.slots - paidParticipants;
+          const teamAvailable = 2 - totalTeams;
+          
+          isAvailable = individualAvailable > 0 || teamAvailable > 0;
+          availableSlots = Math.max(individualAvailable, teamAvailable);
+          
+          if (!isAvailable) {
+            soldOutReason = "All individual slots and team slots filled";
+          }
+        } else {
+          // Individual-only: Sold out when slots filled
+          isAvailable = paidParticipants < event.slots;
+          availableSlots = event.slots - paidParticipants;
+          if (!isAvailable) soldOutReason = "All slots filled";
+        }
+
+        return {
+          ...event,
+          status,
+          participantsCount: paidParticipants,
+          availableSlots,
+          teamCount: totalTeams, // Now showing ALL teams
+          completeTeamCount: completeTeams, // For reference if needed
+          isAvailable,
+          isSoldOut: !isAvailable,
+          soldOutReason,
+          eventType: event.teamOnly 
+            ? "team-only" 
+            : event.allowFreePlayersIfTeamIncomplete 
+              ? "hybrid" 
+              : "individual-only"
+        };
+      })
+    );
+
+    // Apply slot status filter if provided
+    let filteredEvents = enrichedEvents;
     if (slotStatus) {
-      switch (slotStatus) {
-        case "available":
-          events = enrichedEvents.filter((event) => event.isAvailable);
-          break;
-        case "unavailable":
-          events = enrichedEvents.filter((event) => !event.isAvailable);
-          break;
-        default:
-          events = enrichedEvents;
-          break;
-      }
-    } else {
-      events = enrichedEvents;
+      filteredEvents = slotStatus === "available"
+        ? enrichedEvents.filter(e => e.isAvailable)
+        : enrichedEvents.filter(e => !e.isAvailable);
     }
 
     return NextResponse.json({
-      events,
+      events: filteredEvents,
       queryParams: Object.fromEntries(urlParams.entries()),
     });
+    
   } catch (error) {
     console.error("❌ Error fetching events:", error);
     return NextResponse.json(
@@ -184,5 +273,5 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+  
 }
-

@@ -85,7 +85,7 @@ export default function Topbar({ onMenuClick, isSidebarOpen }: {
   };
 
   return (
-    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+    <header className={`sticky top-0 transition-all duration-300 ${
       scrolled 
         ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm' 
         : 'bg-white/90 backdrop-blur-sm'
