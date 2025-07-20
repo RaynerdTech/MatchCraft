@@ -19,9 +19,6 @@ import {
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
-
-
-
 export default function Sidebar({
   isOpen,
   setIsOpen,
@@ -29,6 +26,9 @@ export default function Sidebar({
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
 }) {
+  const { data: session } = useSession();
+  if (!session?.user) return null; // 🔒 Hide sidebar if not logged in
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -72,7 +72,10 @@ function SidebarHeader({ setIsOpen }: { setIsOpen?: (v: boolean) => void }) {
             SH
           </Link>
         </div>
-        <Link href="/" className="hidden lg:block text-gray-800 font-semibold text-lg">
+        <Link
+          href="/"
+          className="hidden lg:block text-gray-800 font-semibold text-lg"
+        >
           SoccerHub
         </Link>
       </div>
@@ -92,7 +95,7 @@ function SidebarHeader({ setIsOpen }: { setIsOpen?: (v: boolean) => void }) {
 function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || "player"; // default to 'player'
+  const userRole = session?.user?.role || "player";
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -102,34 +105,83 @@ function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
       label: "Events",
       icon: <Calendar size={20} />,
       submenu: [
-        { label: "Browse Events", href: "/dashboard/browse-events", icon: <Search size={16} /> },
-        { label: "Create Event", href: "/dashboard/events", icon: <Plus size={16} />, roles: ["organizer", "admin"] },
+        {
+          label: "Browse Events",
+          href: "/dashboard/browse-events",
+          icon: <Search size={16} />,
+        },
+        {
+          label: "Create Event",
+          href: "/dashboard/events",
+          icon: <Plus size={16} />,
+          roles: ["organizer", "admin"],
+        },
       ],
     },
     userRole === "player"
-      ? { label: "Joined Events", href: "/dashboard/joined-events", icon: <Calendar size={20} /> }
-      : { label: "Created Events", href: "/dashboard/created-events", icon: <Calendar size={20} /> },
+      ? {
+          label: "Joined Events",
+          href: "/dashboard/joined-events",
+          icon: <Calendar size={20} />,
+        }
+      : {
+          label: "Created Events",
+          href: "/dashboard/created-events",
+          icon: <Calendar size={20} />,
+        },
     { label: "Teams", href: "/dashboard/teams", icon: <Users size={20} /> },
     userRole === "player" && {
       label: "Invites",
       icon: <Mail size={20} />,
       submenu: [
-        { label: "All Invites", href: "/dashboard/teams/invites", icon: <Mail size={16} /> },
-        { label: "Paid Invites", href: "/dashboard/teams/paid-invites", icon: <CheckCircle size={16} /> },
-        { label: "Unpaid Invites", href: "/dashboard/teams/unpaid-invites", icon: <Calendar size={16} /> },
+        {
+          label: "All Invites",
+          href: "/dashboard/teams/invites",
+          icon: <Mail size={16} />,
+        },
+        {
+          label: "Paid Invites",
+          href: "/dashboard/teams/paid-invites",
+          icon: <CheckCircle size={16} />,
+        },
+        {
+          label: "Unpaid Invites",
+          href: "/dashboard/teams/unpaid-invites",
+          icon: <Calendar size={16} />,
+        },
       ],
     },
-    { label: "Profile", href: "/dashboard/profile", icon: <Settings size={20} /> },
-    { label: "Payments", href: "/dashboard/payments", icon: <Calendar size={20} />, roles: ["organizer", "admin"] },
-    { label: "Verify Ticket", href: "/dashboard/events/verify", icon: <CheckCircle size={20} />, roles: ["organizer", "admin"] },
-    { label: "Settings", href: "/dashboard/settings", icon: <Settings size={20} /> },
+    {
+      label: "Profile",
+      href: "/dashboard/profile",
+      icon: <Settings size={20} />,
+    },
+    {
+      label: "Payments",
+      href: "/dashboard/payments",
+      icon: <Calendar size={20} />,
+      roles: ["organizer", "admin"],
+    },
+    {
+      label: "Verify Ticket",
+      href: "/dashboard/events/verify",
+      icon: <CheckCircle size={20} />,
+      roles: ["organizer", "admin"],
+    },
+    {
+      label: "Settings",
+      href: "/dashboard/settings",
+      icon: <Settings size={20} />,
+    },
   ];
 
   const filteredLinks = links
     .map((link) => {
       if (!link) return null;
       if (link.submenu) {
-        const submenu = link.submenu.filter((sub) => !sub.roles || sub.roles.includes(userRole));
+        const submenu = link.submenu.filter(
+          (sub) => !sub.roles || sub.roles.includes(userRole)
+        );
         return submenu.length ? { ...link, submenu } : null;
       }
       return !link.roles || link.roles.includes(userRole) ? link : null;
@@ -147,7 +199,9 @@ function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
           submenu ? (
             <div key={label} className="space-y-1">
               <button
-                onClick={() => setOpenDropdown(openDropdown === label ? null : label)}
+                onClick={() =>
+                  setOpenDropdown(openDropdown === label ? null : label)
+                }
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 ${
                   openDropdown === label ||
                   submenu.some((item) => pathname === item.href)
@@ -179,7 +233,9 @@ function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      {subItem.icon && <span className="text-gray-500">{subItem.icon}</span>}
+                      {subItem.icon && (
+                        <span className="text-gray-500">{subItem.icon}</span>
+                      )}
                       {subItem.label}
                     </Link>
                   ))}
@@ -204,15 +260,15 @@ function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
         )}
       </div>
 
-      <div className="border-t border-gray-200 pt-4 mt-4">
-       <button
-  onClick={() => signOut({ callbackUrl: "/" })}
-  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-red-500 hover:bg-red-50"
->
-  <LogOut size={20} className="text-red-400" />
-  <span className="font-medium">Sign out</span>
-</button>
-
+      <div className="border-t border-gray-200 pt-4 mt-4 pb-10">
+        {/* Added `pb-10` to push up logout on mobile */}
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-red-500 hover:bg-red-50"
+        >
+          <LogOut size={20} className="text-red-400" />
+          <span className="font-medium">Sign out</span>
+        </button>
       </div>
     </nav>
   );

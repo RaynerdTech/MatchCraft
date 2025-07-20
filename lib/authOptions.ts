@@ -32,16 +32,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        const user = await User.findOne({ email: credentials?.email }).select(
-          "+password"
-        );
+        const user = await User.findOne({ email: credentials?.email }).select("+password");
         if (!user) throw new Error("No user found with this email");
         if (!user.password) throw new Error("Please sign in using Google");
 
-        const isValid = await bcrypt.compare(
-          credentials!.password,
-          user.password
-        );
+        const isValid = await bcrypt.compare(credentials!.password, user.password);
         if (!isValid) throw new Error("Incorrect password");
 
         return {
@@ -65,24 +60,21 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // Initial sign in
-     if (user) {
-  token._id = user._id?.toString() || user.id;
-  token.name = user.name;
-  token.email = user.email;
-  token.image = user.image;
-  token.onboardingComplete = user.onboardingComplete ?? false;
-  token.role = user.role || "player"; // ✅ Add this
-}
+      if (user) {
+        token._id = user._id?.toString() || user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.image = user.image;
+        token.onboardingComplete = user.onboardingComplete ?? false;
+        token.role = user.role || "player";
+      }
 
-      // Update logic stays same
       if (trigger === "update" || token._id) {
         await connectDB();
-        const dbUser = await User.findById(token._id).select(
-          "onboardingComplete"
-        );
+        const dbUser = await User.findById(token._id).select("onboardingComplete role");
         if (dbUser) {
           token.onboardingComplete = dbUser.onboardingComplete ?? false;
+          token.role = dbUser.role || "player";
         }
       }
 
@@ -90,15 +82,14 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-     if (session.user) {
-  session.user._id = token._id;
-  session.user.name = token.name;
-  session.user.email = token.email;
-  session.user.image = token.image;
-  session.user.onboardingComplete = token.onboardingComplete;
-  session.user.role = token.role; // ✅ Add this
-}
-
+      if (session.user) {
+        session.user._id = token._id;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.image;
+        session.user.onboardingComplete = token.onboardingComplete;
+        session.user.role = token.role;
+      }
       return session;
     },
 
@@ -106,8 +97,15 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google") {
         await connectDB();
         const existingUser = await User.findOne({ email: user.email });
-        if (existingUser) return true;
-        return true;
+        if (!existingUser) {
+          await User.create({
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            onboardingComplete: false,
+            role: "player",
+          });
+        }
       }
       return true;
     },
@@ -121,7 +119,7 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     async signIn({ user, account, profile }) {
-      // console.log("🧠 Google Sign In Debug:", { user, account, profile });
+      // Optional event logging
     },
   },
 };

@@ -29,17 +29,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✨ Create the user and assign default role (you can change this)
     const newUser = await User.create({
       email,
       name,
       password: await bcrypt.hash(password, 12),
       provider: "credentials",
       onboardingComplete: false,
-      role: "player", // 👈 Add role explicitly here
+      role: "player", // 👈 Always include role
     });
 
-    // ✅ Create the JWT token including role
     const token = await encode({
       token: {
         _id: newUser._id.toString(),
@@ -47,26 +45,24 @@ export async function POST(req: Request) {
         name: newUser.name,
         email: newUser.email,
         image: null,
-        onboardingComplete: false,
-        provider: "credentials",
-        role: newUser.role, // 👈 Include role in session token
+        onboardingComplete: newUser.onboardingComplete,
+        provider: newUser.provider,
+        role: newUser.role, // ✅ Consistent token with role
       },
       secret: process.env.NEXTAUTH_SECRET!,
     });
 
-    // 🌐 Set response JSON
     const response = NextResponse.json({
       success: true,
       user: {
         _id: newUser._id.toString(),
         email: newUser.email,
         name: newUser.name,
-        onboardingComplete: false,
+        onboardingComplete: newUser.onboardingComplete,
         role: newUser.role,
       },
     });
 
-    // 🍪 Set session cookie with JWT
     response.cookies.set({
       name: "next-auth.session-token",
       value: token,
@@ -74,7 +70,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60, // 30 days
     });
 
     return response;

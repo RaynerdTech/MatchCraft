@@ -9,8 +9,8 @@ import { Clock, MapPin, Users, Calendar } from "lucide-react";
 
 export default function CreateTeamPage() {
   const { eventId } = useParams();
-  const router = useRouter();
-  const { data: session } = useSession();
+
+
 
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -112,7 +112,7 @@ export default function CreateTeamPage() {
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
             {event.title}
           </h1>
-
+    
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="flex items-start gap-3">
               <MapPin

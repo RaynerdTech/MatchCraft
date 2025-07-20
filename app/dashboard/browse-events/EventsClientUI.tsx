@@ -21,7 +21,9 @@ import {
   ChevronUp,
   Clock,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import EventDrawer from "../events/EventDrawer";
+import { useSession } from "next-auth/react";
 
 const SkeletonCard = () => (
   <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse h-full transition-all duration-300 hover:shadow-xl">
@@ -94,6 +96,8 @@ const EventsClientUI = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { data: session } = useSession();
+
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -356,17 +360,56 @@ const EventsClientUI = () => {
       return;
     }
 
-    if (event.isAvailable) {
-      if (event.teamOnly || event.allowFreePlayersIfTeamIncomplete) {
+ if (event.isAvailable) {
+   if (event.teamOnly || event.allowFreePlayersIfTeamIncomplete) {
+      if (session?.user) {
+        // user is logged in
         router.push(`/dashboard/teams/${event._id}`);
       } else {
-        setSelectedEvent(event);
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("event", event._id);
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        // user not logged in, show toast
+        toast.custom((t) => (
+          <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} 
+            max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+            <div className="flex-1 w-0 p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <Users className="h-6 w-6 text-blue-500" />
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    Team Registration Required
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Please login or create an account to register your team
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex border-l border-gray-200">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  router.push(`/signin?callbackUrl=/dashboard/teams/${event._id}`);
+                }}
+                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        ), {
+          duration: 10000,
+          position: 'bottom-center',
+        });
       }
+    } else {
+      // fallback logic if it's not team-only event
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("event", event._id);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
-  };
+  }
+};
 
   const handleCloseDrawer = () => {
     setSelectedEvent(null);

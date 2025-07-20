@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/authOptions";
 import { connectDB } from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import { uploadImageToCloudinary } from "@/utils/uploadImageToCloudinary";
-import { encode } from "next-auth/jwt"; // Using encode instead of getToken
+import { encode } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { phone, skillLevel, position, role, imageBase64 } = body;
 
-    // Validate required fields
     if (!phone || !skillLevel || !position || !imageBase64 || !role) {
       return NextResponse.json(
         { error: "All fields are required" },
@@ -28,10 +27,10 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Upload image
+    // Upload profile image
     const imageUrl = await uploadImageToCloudinary(imageBase64, userId);
 
-    // Update user
+    // Update user in DB
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
@@ -49,43 +48,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Create new token payload matching your jwt callback
+    // Generate new token to include updated user info
     const token = await encode({
       token: {
-        ...session.user, // Preserve existing session data
         _id: updatedUser._id.toString(),
         id: updatedUser._id.toString(),
-        image: imageUrl,
-        onboardingComplete: true,
-        // Include all other fields your jwt callback expects:
         name: updatedUser.name,
         email: updatedUser.email,
+        image: updatedUser.image,
+        role: updatedUser.role,
+        onboardingComplete: true,
       },
       secret: process.env.NEXTAUTH_SECRET!,
     });
 
-    // Create response
     const response = NextResponse.json({
       success: true,
       user: {
         _id: updatedUser._id,
-        email: updatedUser.email,
         name: updatedUser.name,
+        email: updatedUser.email,
         image: updatedUser.image,
         onboardingComplete: true,
       },
       redirectTo: "/dashboard",
     });
 
-    // Set session cookie
-    response.cookies.set({
-      name: "next-auth.session-token",
-      value: token,
+    // Set updated session cookie manually
+    response.cookies.set("next-auth.session-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
     return response;
