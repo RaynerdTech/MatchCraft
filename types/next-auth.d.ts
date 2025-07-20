@@ -12,7 +12,8 @@ declare module "next-auth" {
       onboardingComplete?: boolean;
       skillLevel?: string;
       position?: string;
-      provider?: "google" | "credentials"; // Added provider field
+      provider?: "google" | "credentials";
+      role?: "player" | "organizer" | "admin"; // ✅ added here
     };
   }
 
@@ -24,7 +25,8 @@ declare module "next-auth" {
     onboardingComplete?: boolean;
     skillLevel?: string;
     position?: string;
-    provider?: "google" | "credentials"; // Added provider field
+    provider?: "google" | "credentials";
+    role?: "player" | "organizer" | "admin"; // ✅ added here
   }
 }
 
@@ -37,6 +39,7 @@ declare module "next-auth/jwt" {
     onboardingComplete?: boolean;
     skillLevel?: string;
     position?: string;
-    provider?: "google" | "credentials"; // Added provider field
+    provider?: "google" | "credentials";
+    role?: "player" | "organizer" | "admin"; // ✅ added here
   }
 }

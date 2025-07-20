@@ -1,43 +1,31 @@
-// app/dashboard/layout.tsx
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { SessionProvider } from 'next-auth/react';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { SessionProvider } from 'next-auth/react'
+import Sidebar from './components/Sidebar'
+import Topbar from './components/Topbar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const pathname = usePathname()
 
   return (
     <SessionProvider>
-      <div className="flex h-screen overflow-hidden bg-gray-50">
-        {/* Sidebar */}
+      <div className="flex h-dvh bg-gray-50">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-        {/* Main Content */}
         <div className="flex flex-col flex-1 relative">
-          <Topbar 
-            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+          <Topbar
+            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
             isSidebarOpen={isSidebarOpen}
           />
 
           <main className="flex-1 overflow-y-auto px-4 py-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
+            {children}
           </main>
         </div>
 
-        {/* Overlay on mobile */}
         {isSidebarOpen && (
           <div
             onClick={() => setIsSidebarOpen(false)}
@@ -46,5 +34,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </div>
     </SessionProvider>
-  );
+  )
 }

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getSession } from 'next-auth/react';
-import type { Variants } from 'framer-motion';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { getSession } from "next-auth/react";
+import type { Variants } from "framer-motion";
 
 // Constants for dropdown options
-const skillOptions = ['beginner', 'intermediate', 'advanced'];
-const positionOptions = ['goalkeeper', 'defender', 'midfielder', 'forward'];
-const roleOptions = ['player', 'organizer'];
+const skillOptions = ["beginner", "intermediate", "advanced"];
+const positionOptions = ["goalkeeper", "defender", "midfielder", "forward"];
+const roleOptions = ["player", "organizer"];
 
 // Animation variants for consistent motion
 const containerVariants: Variants = {
@@ -18,9 +18,9 @@ const containerVariants: Variants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
+      delayChildren: 0.2,
+    },
+  },
 };
 
 const itemVariants: Variants = {
@@ -29,56 +29,56 @@ const itemVariants: Variants = {
     y: 0,
     opacity: 1,
     transition: {
-      type: 'spring',
+      type: "spring",
       stiffness: 100,
-      damping: 10
-    }
-  }
+      damping: 10,
+    },
+  },
 };
 
 const buttonVariants = {
   hover: {
     scale: 1.02,
-    boxShadow: '0 10px 20px rgba(0, 0, 255, 0.2)',
+    boxShadow: "0 10px 20px rgba(0, 0, 255, 0.2)",
     transition: {
       duration: 0.3,
-      yoyo: Infinity
-    }
+      yoyo: Infinity,
+    },
   },
   tap: {
-    scale: 0.98
-  }
+    scale: 0.98,
+  },
 };
 
 // Image validation function
 const validateImage = (base64: string) => {
   if (!base64) return "Image is required";
-  if (!base64.startsWith('data:image/')) {
+  if (!base64.startsWith("data:image/")) {
     return "Invalid image format";
   }
-  
-  const base64Length = base64.length - 'data:image/png;base64,'.length;
+
+  const base64Length = base64.length - "data:image/png;base64,".length;
   const sizeInBytes = 4 * Math.ceil(base64Length / 3) * 0.5624896334383812;
-  
+
   if (sizeInBytes > 2 * 1024 * 1024) {
     return "Image must be smaller than 2MB";
   }
-  
+
   return null;
 };
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    phone: '',
-    skillLevel: '',
-    position: '',
-    role: '',
-    imageBase64: '',
+    phone: "",
+    skillLevel: "",
+    position: "",
+    role: "",
+    imageBase64: "",
   });
-  const [imagePreview, setImagePreview] = useState('');
+  const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -87,26 +87,25 @@ export default function OnboardingPage() {
   // Check for authenticated session
   useEffect(() => {
     getSession().then((session) => {
-      if (!session) router.push('/signin');
+      if (!session) router.push("/signin");
     });
   }, [router]);
 
   // Validate form
   useEffect(() => {
-    const isValid = (
-      form.phone && 
-      form.skillLevel && 
-      form.position && 
-      form.role && 
-      form.imageBase64 && 
-      !validateImage(form.imageBase64)
-    );
+    const isValid =
+      form.phone &&
+      form.skillLevel &&
+      form.position &&
+      form.role &&
+      form.imageBase64 &&
+      !validateImage(form.imageBase64);
     setFormValid(Boolean(isValid));
   }, [form]);
 
   // Handle file processing
   const processFile = useCallback((file: File) => {
-    setError('');
+    setError("");
     setUploadProgress(0);
 
     const reader = new FileReader();
@@ -118,14 +117,14 @@ export default function OnboardingPage() {
       }
     };
     reader.onloadend = () => {
-      const base64String = reader.result?.toString() || '';
-      setForm(prev => ({ ...prev, imageBase64: base64String }));
+      const base64String = reader.result?.toString() || "";
+      setForm((prev) => ({ ...prev, imageBase64: base64String }));
       setImagePreview(base64String);
       setLoading(false);
       setUploadProgress(100);
     };
     reader.onerror = () => {
-      setError('Failed to read image file');
+      setError("Failed to read image file");
       setLoading(false);
       setUploadProgress(0);
     };
@@ -154,7 +153,7 @@ export default function OnboardingPage() {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       processFile(files[0]);
@@ -172,7 +171,7 @@ export default function OnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // Validate image before submission
@@ -182,37 +181,36 @@ export default function OnboardingPage() {
       }
 
       // Submit onboarding data
-      const res = await fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to submit');
+        throw new Error(errorData.error || "Failed to submit");
       }
 
       // Force session update
-      await fetch('/api/auth/session?update', {
-        method: 'GET',
-        cache: 'no-store',
+      await fetch("/api/auth/session?update", {
+        method: "GET",
+        cache: "no-store",
       });
 
       // Show success and redirect
       setSuccess(true);
       setTimeout(() => {
-        window.location.href = '/dashboard?_t=' + Date.now();
+        window.location.href = "/dashboard?_t=" + Date.now();
       }, 1500);
-
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message || "An unexpected error occurred");
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 p-4 md:p-8">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 p-4 md:p-8">
       {/* Success overlay animation */}
       <AnimatePresence>
         {success && (
@@ -225,7 +223,7 @@ export default function OnboardingPage() {
             <motion.div
               initial={{ scale: 0.5 }}
               animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
+              transition={{ type: "spring", stiffness: 200 }}
               className="bg-white p-8 rounded-xl text-center"
             >
               <motion.svg
@@ -236,10 +234,19 @@ export default function OnboardingPage() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </motion.svg>
-              <h2 className="text-2xl font-bold text-gray-800">Profile Complete!</h2>
-              <p className="text-gray-600 mt-2">Redirecting to your dashboard...</p>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Profile Complete!
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Redirecting to your dashboard...
+              </p>
             </motion.div>
           </motion.div>
         )}
@@ -252,7 +259,7 @@ export default function OnboardingPage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-2xl"
       >
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -261,23 +268,35 @@ export default function OnboardingPage() {
           {/* Decorative elements */}
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-100 rounded-full opacity-30"></div>
           <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-purple-100 rounded-full opacity-20"></div>
-          
+
           {/* Form header */}
           <motion.div variants={itemVariants} className="relative z-10">
             <div className="flex justify-center mb-6">
-              <motion.div 
+              <motion.div
                 whileHover={{ rotate: 10 }}
                 className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg"
               >
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
               </motion.div>
             </div>
             <h1 className="text-3xl font-bold text-center text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Complete Your Profile
             </h1>
-            <p className="text-center text-gray-500 mb-6">Just a few more details to get started</p>
+            <p className="text-center text-gray-500 mb-6">
+              Just a few more details to get started
+            </p>
           </motion.div>
 
           {/* Error message */}
@@ -289,8 +308,18 @@ export default function OnboardingPage() {
                 exit={{ opacity: 0 }}
                 className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm flex items-center"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 {error}
               </motion.div>
@@ -300,8 +329,13 @@ export default function OnboardingPage() {
           {/* Form fields */}
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <motion.div whileHover={{ scale: 1.01 }} whileFocus={{ scale: 1.01 }}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileFocus={{ scale: 1.01 }}
+              >
                 <input
                   type="tel"
                   className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
@@ -314,12 +348,16 @@ export default function OnboardingPage() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Skill Level</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Skill Level
+              </label>
               <motion.div whileHover={{ scale: 1.01 }}>
                 <select
                   className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjYgOSAxMiAxNSAxOCA5Ij48L3BvbHlsaW5lPjwvc3ZnPg==')] bg-no-repeat bg-[center_right_1rem]"
                   value={form.skillLevel}
-                  onChange={(e) => setForm({ ...form, skillLevel: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, skillLevel: e.target.value })
+                  }
                   required
                 >
                   <option value="">Select your skill level</option>
@@ -333,12 +371,16 @@ export default function OnboardingPage() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Position</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Preferred Position
+              </label>
               <motion.div whileHover={{ scale: 1.01 }}>
                 <select
                   className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjYgOSAxMiAxNSAxOCA5Ij48L3BvbHlsaW5lPjwvc3ZnPg==')] bg-no-repeat bg-[center_right_1rem]"
                   value={form.position}
-                  onChange={(e) => setForm({ ...form, position: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, position: e.target.value })
+                  }
                   required
                 >
                   <option value="">Select your position</option>
@@ -352,7 +394,9 @@ export default function OnboardingPage() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Role
+              </label>
               <motion.div whileHover={{ scale: 1.01 }}>
                 <select
                   className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjYgOSAxMiAxNSAxOCA5Ij48L3BvbHlsaW5lPjwvc3ZnPg==')] bg-no-repeat bg-[center_right_1rem]"
@@ -371,17 +415,19 @@ export default function OnboardingPage() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
-              <motion.div 
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Profile Picture
+              </label>
+              <motion.div
                 whileHover={{ scale: 1.01 }}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 className={`mt-1 flex flex-col items-center justify-center px-6 py-8 border-2 border-dashed rounded-xl transition-all duration-200 ${
-                  isDragging 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-300 hover:border-blue-500'
+                  isDragging
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-blue-500"
                 }`}
               >
                 <input
@@ -391,17 +437,35 @@ export default function OnboardingPage() {
                   id="profile-picture"
                   onChange={handleImageChange}
                 />
-                <label htmlFor="profile-picture" className="cursor-pointer text-center">
-                  <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <label
+                  htmlFor="profile-picture"
+                  className="cursor-pointer text-center"
+                >
+                  <svg
+                    className="w-12 h-12 mx-auto text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   <p className="mt-2 text-sm text-gray-600">
-                    <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
+                    <span className="font-semibold text-blue-600">
+                      Click to upload
+                    </span>{" "}
+                    or drag and drop
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    PNG, JPG up to 2MB
+                  </p>
                 </label>
               </motion.div>
-              
+
               {/* Image preview with animation */}
               <AnimatePresence>
                 {imagePreview && (
@@ -411,24 +475,34 @@ export default function OnboardingPage() {
                     className="mt-4 flex justify-center"
                   >
                     <div className="relative">
-                      <motion.img 
-                        src={imagePreview} 
-                        alt="Preview" 
+                      <motion.img
+                        src={imagePreview}
+                        alt="Preview"
                         className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                         whileHover={{ scale: 1.1 }}
                       />
                       <motion.button
                         type="button"
                         onClick={() => {
-                          setImagePreview('');
-                          setForm(prev => ({ ...prev, imageBase64: '' }));
+                          setImagePreview("");
+                          setForm((prev) => ({ ...prev, imageBase64: "" }));
                         }}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </motion.button>
                     </div>
@@ -438,8 +512,8 @@ export default function OnboardingPage() {
               {/* Upload progress indicator */}
               {uploadProgress > 0 && uploadProgress < 100 && (
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full" 
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
@@ -455,24 +529,28 @@ export default function OnboardingPage() {
                 whileHover={formValid ? "hover" : {}}
                 whileTap={formValid ? "tap" : {}}
                 className={`w-full py-4 rounded-xl font-semibold text-white transition-all duration-300 ${
-                  loading 
-                    ? 'bg-blue-400' 
-                    : formValid 
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600' 
-                      : 'bg-gray-400 cursor-not-allowed'
+                  loading
+                    ? "bg-blue-400"
+                    : formValid
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600"
+                    : "bg-gray-400 cursor-not-allowed"
                 }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
                     <motion.span
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="inline-block h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"
                     />
                     Processing...
                   </span>
                 ) : (
-                  'Complete Profile'
+                  "Complete Profile"
                 )}
               </motion.button>
             </motion.div>

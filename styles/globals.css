@@ -2,10 +2,19 @@ input, button, link, a {
     cursor: pointer;
 }
 
+html,
+body {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  width: 100%;
+  min-height: 100vh
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 
 /* Add these animation styles */
 @keyframes slideIn {

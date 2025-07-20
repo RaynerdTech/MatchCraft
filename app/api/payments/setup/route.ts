@@ -3,17 +3,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { connectDB } from "@/lib/mongoose";
 import User from "@/lib/models/User";
-import { createPaystackSubaccount } from "@/lib/paystack"; // ⚠️ updated import
+import { createPaystackSubaccount } from "@/lib/paystack";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?._id;
 
-    if (!userId) {
+    // ✅ Ensure session and user
+    const userId = session?.user?._id;
+    const userRole = session?.user?.role;
+
+    if (!userId || !userRole) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // ✅ Role check using session
+    if (!["organizer", "admin"].includes(userRole)) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     const { bankCode, bankName, accountNumber } = await req.json();
@@ -32,21 +40,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Role check
-    const roleRes = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/users/${userId}/role`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      }
-    );
-
-    const roleData = await roleRes.json();
-    if (!["organizer", "admin"].includes(roleData?.role)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
     try {
       const { subaccountCode, accountName } = await createPaystackSubaccount({
         name: user.name || "Unnamed",
@@ -54,12 +47,12 @@ export async function POST(req: Request) {
         accountNumber,
       });
 
-      // Save subaccount info
+      // ✅ Save subaccount info to user
       user.bankCode = bankCode;
       user.bankName = bankName || null;
       user.accountNumber = accountNumber;
       user.accountName = accountName;
-      user.subaccountCode = subaccountCode; // ✅ key change
+      user.subaccountCode = subaccountCode;
       user.bankSetupComplete = true;
 
       await user.save();
@@ -70,6 +63,7 @@ export async function POST(req: Request) {
       });
     } catch (err: any) {
       console.error("❌ Paystack Subaccount Creation Error:", err.message);
+
       user.bankSetupComplete = false;
       await user.save();
 

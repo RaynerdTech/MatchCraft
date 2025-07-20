@@ -1,3 +1,4 @@
+// app/api/auth/signup/route.ts
 import { connectDB } from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
@@ -9,14 +10,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { email, name, password } = body;
 
-    // Validation
     if (!email || !name || !password) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     await connectDB();
 
-    // Check existing user - now checks provider too
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -30,16 +29,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create user with provider field
+    // ✨ Create the user and assign default role (you can change this)
     const newUser = await User.create({
       email,
       name,
       password: await bcrypt.hash(password, 12),
-      provider: "credentials", // Explicitly set provider
+      provider: "credentials",
       onboardingComplete: false,
+      role: "player", // 👈 Add role explicitly here
     });
 
-    // Create token payload - now includes provider
+    // ✅ Create the JWT token including role
     const token = await encode({
       token: {
         _id: newUser._id.toString(),
@@ -48,12 +48,13 @@ export async function POST(req: Request) {
         email: newUser.email,
         image: null,
         onboardingComplete: false,
-        provider: "credentials", // Added provider to token
+        provider: "credentials",
+        role: newUser.role, // 👈 Include role in session token
       },
       secret: process.env.NEXTAUTH_SECRET!,
     });
 
-    // Set response - unchanged frontend structure
+    // 🌐 Set response JSON
     const response = NextResponse.json({
       success: true,
       user: {
@@ -61,10 +62,11 @@ export async function POST(req: Request) {
         email: newUser.email,
         name: newUser.name,
         onboardingComplete: false,
+        role: newUser.role,
       },
     });
 
-    // Set cookie - unchanged
+    // 🍪 Set session cookie with JWT
     response.cookies.set({
       name: "next-auth.session-token",
       value: token,

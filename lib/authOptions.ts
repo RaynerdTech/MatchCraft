@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
           id: user._id.toString(),
           _id: user._id.toString(),
           onboardingComplete: user.onboardingComplete ?? false,
+          role: user.role || "player",
         };
       },
     }),
@@ -65,13 +66,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       // Initial sign in
-      if (user) {
-        token._id = user._id?.toString() || user.id;
-        token.name = user.name;
-        token.email = user.email;
-        token.image = user.image;
-        token.onboardingComplete = user.onboardingComplete ?? false;
-      }
+     if (user) {
+  token._id = user._id?.toString() || user.id;
+  token.name = user.name;
+  token.email = user.email;
+  token.image = user.image;
+  token.onboardingComplete = user.onboardingComplete ?? false;
+  token.role = user.role || "player"; // ✅ Add this
+}
 
       // Update logic stays same
       if (trigger === "update" || token._id) {
@@ -88,13 +90,15 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      if (session.user) {
-        session.user._id = token._id;
-        session.user.name = token.name;
-        session.user.email = token.email;
-        session.user.image = token.image;
-        session.user.onboardingComplete = token.onboardingComplete;
-      }
+     if (session.user) {
+  session.user._id = token._id;
+  session.user.name = token.name;
+  session.user.email = token.email;
+  session.user.image = token.image;
+  session.user.onboardingComplete = token.onboardingComplete;
+  session.user.role = token.role; // ✅ Add this
+}
+
       return session;
     },
 
@@ -117,7 +121,7 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     async signIn({ user, account, profile }) {
-      console.log("🧠 Google Sign In Debug:", { user, account, profile });
+      // console.log("🧠 Google Sign In Debug:", { user, account, profile });
     },
   },
 };

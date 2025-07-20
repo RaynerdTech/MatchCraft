@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import {
   CalendarIcon,
   UsersIcon,
@@ -12,7 +12,7 @@ import {
   MapPinIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-} from '@heroicons/react/24/outline'; // Using Heroicons for a modern look
+} from "@heroicons/react/24/outline";
 
 export default function DashboardHome() {
   const { data: session } = useSession();
@@ -21,8 +21,9 @@ export default function DashboardHome() {
 
   const [role, setRole] = useState<string | null>(null);
   const [eventCount, setEventCount] = useState(0);
-  const [position, setPosition] = useState('N/A');
-  const [skillLevel, setSkillLevel] = useState('N/A');
+  const [teamCount, setTeamCount] = useState(0);
+  const [position, setPosition] = useState("N/A");
+  const [skillLevel, setSkillLevel] = useState("N/A");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,30 +44,43 @@ export default function DashboardHome() {
           throw new Error(`Failed to fetch user data: ${userRes.statusText}`);
         }
         const userData = await userRes.json();
-        setPosition(userData.position || 'N/A');
-        setSkillLevel(userData.skillLevel || 'N/A');
+        setPosition(userData.position || "N/A");
+        setSkillLevel(userData.skillLevel || "N/A");
         setRole(userData.role || null);
 
         // 2. Fetch event count
         const endpoint =
-          userData.role === 'organizer' || userData.role === 'admin'
+          userData.role === "organizer" || userData.role === "admin"
             ? `/api/dashset/events/created/${userId}`
             : `/api/dashset/events/${userId}`;
 
         const eventsRes = await fetch(endpoint);
         if (!eventsRes.ok) {
-          throw new Error(`Failed to fetch events data: ${eventsRes.statusText}`);
+          throw new Error(
+            `Failed to fetch events data: ${eventsRes.statusText}`
+          );
         }
         const eventsData = await eventsRes.json();
 
-        const count = eventsData?.count !== undefined
-          ? eventsData.count
-          : Array.isArray(eventsData) ? eventsData.length : 0;
+        const count =
+          eventsData?.count !== undefined
+            ? eventsData.count
+            : Array.isArray(eventsData)
+            ? eventsData.length
+            : 0;
 
         setEventCount(count);
+
+        // 3. Fetch team count
+        const teamsRes = await fetch(`/api/dashset/team/accepted/${userId}`);
+        if (!teamsRes.ok) {
+          throw new Error(`Failed to fetch teams data: ${teamsRes.statusText}`);
+        }
+        const teamsData = await teamsRes.json();
+        setTeamCount(teamsData.count || 0);
       } catch (err: any) {
-        console.error('Dashboard fetch error:', err);
-        setError(err.message || 'An unexpected error occurred.');
+        console.error("Dashboard fetch error:", err);
+        setError(err.message || "An unexpected error occurred.");
       } finally {
         setIsLoading(false);
       }
@@ -77,24 +91,27 @@ export default function DashboardHome() {
 
   const statCards = [
     {
-      label: role === 'organizer' || role === 'admin' ? 'Events Created' : 'Events Joined',
+      label:
+        role === "organizer" || role === "admin"
+          ? "Events Created"
+          : "Events Joined",
       value: String(eventCount),
-      icon: <CalendarIcon className="h-6 w-6 text-indigo-500" />
+      icon: <CalendarIcon className="h-6 w-6 text-indigo-500" />,
     },
     {
-      label: 'Teams',
-      value: '1', // This is hardcoded; ideally, it would be fetched
-      icon: <UsersIcon className="h-6 w-6 text-emerald-500" />
+      label: "Teams",
+      value: String(teamCount),
+      icon: <UsersIcon className="h-6 w-6 text-emerald-500" />,
     },
     {
-      label: 'Skill Level',
+      label: "Skill Level",
       value: skillLevel,
-      icon: <SparklesIcon className="h-6 w-6 text-rose-500" />
+      icon: <SparklesIcon className="h-6 w-6 text-rose-500" />,
     },
     {
-      label: 'Position',
+      label: "Position",
       value: position,
-      icon: <MapPinIcon className="h-6 w-6 text-amber-500" />
+      icon: <MapPinIcon className="h-6 w-6 text-amber-500" />,
     },
   ];
 
@@ -127,7 +144,7 @@ export default function DashboardHome() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"
+      className="min-h-dvh bg-gray-50 p-4 sm:p-6 lg:p-8"
     >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Welcome Section */}
@@ -141,7 +158,7 @@ export default function DashboardHome() {
           <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
             <div className="relative flex-shrink-0">
               <Image
-                src={user?.image || '/default-avatar.png'}
+                src={user?.image || "/default-avatar.png"}
                 alt="User avatar"
                 width={80}
                 height={80}
@@ -155,18 +172,16 @@ export default function DashboardHome() {
             </div>
             <div className="text-center sm:text-left">
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                Welcome back, {user?.name?.split(' ')[0] || 'Player'}!
+                Welcome back, {user?.name?.split(" ")[0] || "Player"}!
               </h1>
               <p className="mt-2 text-indigo-100 text-lg">
-                {role === 'organizer' || role === 'admin'
+                {role === "organizer" || role === "admin"
                   ? "Let's organize something amazing today."
                   : "Ready to conquer the competition?"}
               </p>
             </div>
           </div>
         </motion.div>
-
-        {/* --- */}
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -175,17 +190,34 @@ export default function DashboardHome() {
               key={card.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 + index * 0.1, ease: "easeOut" }}
-              whileHover={{ y: -8, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)" }}
+              transition={{
+                duration: 0.5,
+                delay: 0.2 + index * 0.1,
+                ease: "easeOut",
+              }}
+              whileHover={{
+                y: -8,
+                boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)",
+              }}
               className="bg-white rounded-xl shadow-md p-6 border border-gray-100 transition-all duration-300 transform hover:scale-[1.02] cursor-pointer"
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">{card.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{card.value}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-500 truncate">
+                    {card.label}
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2 truncate">
+                    {card.value}
+                  </p>
                 </div>
-                <div className="p-3 bg-opacity-15 rounded-xl"
-                  style={{ backgroundColor: `${card.icon.props.className.split(' ').find(c => c.startsWith('text-'))?.replace('text-', '')}-100` }}
+                <div
+                  className="p-3 bg-opacity-15 rounded-xl flex-shrink-0 ml-4"
+                  style={{
+                    backgroundColor: `${card.icon.props.className
+                      .split(" ")
+                      .find((c) => c.startsWith("text-"))
+                      ?.replace("text-", "")}-100`,
+                  }}
                 >
                   {card.icon}
                 </div>
@@ -194,8 +226,6 @@ export default function DashboardHome() {
           ))}
         </div>
 
-        {/* --- */}
-
         {/* Quick Actions Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -203,11 +233,16 @@ export default function DashboardHome() {
           transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
           className="bg-white rounded-xl shadow-md p-6 sm:p-8 border border-gray-100"
         >
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Quick Actions
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/dashboard/browse-events" passHref>
               <motion.button
-                whileHover={{ scale: 1.02, boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)" }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+                }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               >
@@ -218,7 +253,10 @@ export default function DashboardHome() {
 
             <Link href="/dashboard/teams" passHref>
               <motion.button
-                whileHover={{ scale: 1.02, boxShadow: "0 8px 16px rgba(0, 0, 0, 0.08)" }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.08)",
+                }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full flex items-center justify-center px-6 py-3 border border-indigo-400 text-indigo-700 bg-white font-semibold rounded-lg shadow-md hover:bg-indigo-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
               >
@@ -227,10 +265,13 @@ export default function DashboardHome() {
               </motion.button>
             </Link>
 
-            {(role === 'organizer' || role === 'admin') && (
+            {(role === "organizer" || role === "admin") && (
               <Link href="/dashboard/events" passHref>
                 <motion.button
-                  whileHover={{ scale: 1.02, boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)" }}
+                  whileHover={{
+                    scale: 1.02,
+                    boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+                  }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-br from-purple-500 to-pink-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
                 >

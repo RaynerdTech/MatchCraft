@@ -1,9 +1,21 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Calendar, Clock, MapPin, User, ArrowLeft, Edit, Eye, Ticket, Share2, MoreVertical, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  ArrowLeft,
+  Edit,
+  Eye,
+  Ticket,
+  Share2,
+  MoreVertical,
+  AlertCircle,
+} from "lucide-react";
 
 type Event = {
   _id: string;
@@ -27,23 +39,23 @@ export default function EventDetailsPage() {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         const res = await fetch(`/api/events/${id}`);
-        
+
         if (res.status === 401) {
-          throw new Error('Please login to view this event');
+          throw new Error("Please login to view this event");
         }
-        
+
         if (res.status === 403) {
-          throw new Error('Only organizers and admins can access this event');
+          throw new Error("Only organizers and admins can access this event");
         }
 
         if (!res.ok) {
-          throw new Error('Failed to fetch event details');
+          throw new Error("Failed to fetch event details");
         }
 
         const data = await res.json();
@@ -68,12 +80,12 @@ export default function EventDetailsPage() {
 
   const handleShareEvent = () => {
     navigator.clipboard.writeText(`${window.location.origin}/events/${id}`);
-    alert('Event link copied to clipboard!');
+    alert("Event link copied to clipboard!");
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -81,20 +93,20 @@ export default function EventDetailsPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-center p-6 max-w-md bg-red-50 rounded-lg">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">{error}</h2>
-          {error.includes('login') ? (
-            <button 
-              onClick={() => router.push('/signin')}
+          {error.includes("login") ? (
+            <button
+              onClick={() => router.push("/signin")}
               className="mt-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
             >
               Go to Login
             </button>
           ) : (
-            <button 
-              onClick={() => router.push('/dashboard/browse-events')}
+            <button
+              onClick={() => router.push("/dashboard/browse-events")}
               className="mt-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               <ArrowLeft className="mr-2 h-4 w-4 inline" />
@@ -112,7 +124,7 @@ export default function EventDetailsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button 
+      <button
         onClick={() => router.back()}
         className="mb-6 flex items-center text-gray-600 hover:text-gray-900"
       >
@@ -140,21 +152,21 @@ export default function EventDetailsPage() {
                 <h1 className="text-3xl font-bold text-gray-900">
                   {event.title}
                 </h1>
-                
+
                 {(event.isOrganizer || event.isAdmin) && (
                   <div className="relative">
                     <button className="p-2 rounded-full hover:bg-gray-100">
                       <MoreVertical className="h-5 w-5" />
                     </button>
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                      <button 
+                      <button
                         onClick={handleEditEvent}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                       >
                         <Edit className="mr-2 h-4 w-4 inline" />
                         Edit Event
                       </button>
-                      <button 
+                      <button
                         onClick={handleTrackEvent}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                       >
@@ -170,10 +182,10 @@ export default function EventDetailsPage() {
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                   <Calendar className="h-4 w-4 mr-1" />
                   {new Date(event.date).toLocaleDateString(undefined, {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
                   })}
                 </span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
@@ -182,8 +194,8 @@ export default function EventDetailsPage() {
                 </span>
                 {event.pricePerPlayer > 0 && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                    <Ticket className="h-4 w-4 mr-1" />
-                    ₦{event.pricePerPlayer.toLocaleString()}
+                    <Ticket className="h-4 w-4 mr-1" />₦
+                    {event.pricePerPlayer.toLocaleString()}
                   </span>
                 )}
               </div>
@@ -200,7 +212,9 @@ export default function EventDetailsPage() {
                     <MapPin className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Location</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Location
+                    </h3>
                     <p className="font-medium">{event.location}</p>
                   </div>
                 </div>
@@ -210,7 +224,9 @@ export default function EventDetailsPage() {
                     <User className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Organizer</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Organizer
+                    </h3>
                     <p className="font-medium">{event.createdBy.name}</p>
                   </div>
                 </div>
@@ -221,21 +237,21 @@ export default function EventDetailsPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {(event.isOrganizer || event.isAdmin) ? (
+          {event.isOrganizer || event.isAdmin ? (
             <>
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h2 className="text-lg font-semibold">Organizer Tools</h2>
                 </div>
                 <div className="p-6 space-y-3">
-                  <button 
+                  <button
                     onClick={handleTrackEvent}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <Eye className="mr-2 h-4 w-4 inline" />
                     Track Event
                   </button>
-                  <button 
+                  <button
                     onClick={handleEditEvent}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
@@ -247,7 +263,7 @@ export default function EventDetailsPage() {
 
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <div className="p-6">
-                  <button 
+                  <button
                     onClick={handleShareEvent}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
@@ -262,9 +278,11 @@ export default function EventDetailsPage() {
               <div className="p-6">
                 <button className="w-full mb-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                   <Ticket className="mr-2 h-4 w-4 inline" />
-                  {event.pricePerPlayer > 0 ? `Book for ₦${event.pricePerPlayer}` : 'Join Event'}
+                  {event.pricePerPlayer > 0
+                    ? `Book for ₦${event.pricePerPlayer}`
+                    : "Join Event"}
                 </button>
-                <button 
+                <button
                   onClick={handleShareEvent}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
@@ -286,10 +304,10 @@ export default function EventDetailsPage() {
                   <p className="text-sm text-gray-500">Date</p>
                   <p className="font-medium">
                     {new Date(event.date).toLocaleDateString(undefined, {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </p>
                 </div>

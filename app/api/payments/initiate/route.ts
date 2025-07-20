@@ -122,7 +122,7 @@ export async function POST(req: Request) {
     );
 
     const data = await paystackRes.json();
-    console.log("[PAYSTACK_INIT_RESPONSE]", data);
+    // console.log("[PAYSTACK_INIT_RESPONSE]", data);
 
     if (!data.status) {
       return NextResponse.json(

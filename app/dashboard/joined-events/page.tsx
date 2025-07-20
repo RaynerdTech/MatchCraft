@@ -33,7 +33,7 @@ export default function JoinedEventsPage() {
       
       if (!session) {
         setError('Please login to view your events');
-        router.push('/auth/login');
+        router.push('/signin');
         return;
       }
 

@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import {
   Home,
   Calendar,
@@ -18,8 +16,11 @@ import {
   CheckCircle,
   Mail,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+
+
+
 
 export default function Sidebar({
   isOpen,
@@ -28,36 +29,35 @@ export default function Sidebar({
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
 }) {
-  const pathname = usePathname();
-
   return (
     <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {/* Overlay for mobile */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-100 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsOpen(false)}
+        aria-hidden="true"
+      />
 
-      <motion.aside
-        initial={{ x: "-100%" }}
-        animate={{ x: isOpen ? 0 : "-100%" }}
-        exit={{ x: "-100%" }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed z-40 w-72 h-full bg-gradient-to-b from-gray-50 to-white border-r shadow-xl px-4 py-6 space-y-8 lg:hidden"
+      {/* Mobile Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-72 flex-col border-r border-gray-200 bg-gradient-to-b from-gray-50 to-white shadow-xl transition-transform duration-100 lg:hidden ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <SidebarHeader setIsOpen={setIsOpen} />
-        <NavLinks pathname={pathname} setIsOpen={setIsOpen} />
-      </motion.aside>
+        <div className="flex-1 overflow-y-auto">
+          <NavLinks setIsOpen={setIsOpen} />
+        </div>
+      </aside>
 
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-full lg:border-r lg:bg-gradient-to-b lg:from-gray-50 lg:to-white lg:shadow-lg lg:px-5 lg:py-8 lg:space-y-8">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:border-r lg:border-gray-200 lg:bg-gradient-to-b from-gray-50 to-white shadow-lg">
         <SidebarHeader />
-        <NavLinks pathname={pathname} setIsOpen={setIsOpen} />
+        <div className="flex-1 overflow-y-auto">
+          <NavLinks setIsOpen={setIsOpen} />
+        </div>
       </aside>
     </>
   );
@@ -65,22 +65,22 @@ export default function Sidebar({
 
 function SidebarHeader({ setIsOpen }: { setIsOpen?: (v: boolean) => void }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex h-16 shrink-0 items-center justify-between px-4 py-6">
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-            <Link
-          href="/"
-          
-          aria-label="SoccerHub Home"
-        >
-         SH
-        </Link>
+        <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold text-white">
+          <Link href="/" aria-label="SoccerHub Home">
+            SH
+          </Link>
         </div>
+        <Link href="/" className="hidden lg:block text-gray-800 font-semibold text-lg">
+          SoccerHub
+        </Link>
       </div>
       {setIsOpen && (
         <button
           onClick={() => setIsOpen(false)}
-          className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+          className="rounded-full p-1 transition-colors hover:bg-gray-200"
+          aria-label="Close sidebar"
         >
           <X className="h-5 w-5 text-gray-600" />
         </button>
@@ -89,35 +89,12 @@ function SidebarHeader({ setIsOpen }: { setIsOpen?: (v: boolean) => void }) {
   );
 }
 
-function NavLinks({
-  pathname,
-  setIsOpen,
-}: {
-  pathname: string;
-  setIsOpen: (v: boolean) => void;
-}) {
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
+  const pathname = usePathname();
   const { data: session } = useSession();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const userRole = session?.user?.role || "player"; // default to 'player'
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      const userId = session?.user?._id;
-      if (!userId || !/^[0-9a-f]{24}$/i.test(userId)) return;
-
-      try {
-        const res = await fetch(`/api/users/${userId}/role`);
-        const data = await res.json();
-        if (res.ok && data.role) setUserRole(data.role);
-      } catch (err) {
-        console.error("Failed to fetch role:", err);
-      }
-    };
-
-    if (session?.user?._id && !userRole) {
-      fetchUserRole();
-    }
-  }, [session, userRole]);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const links = [
     { label: "Home", href: "/dashboard", icon: <Home size={20} /> },
@@ -125,188 +102,117 @@ function NavLinks({
       label: "Events",
       icon: <Calendar size={20} />,
       submenu: [
-        {
-          label: "Browse Events",
-          href: "/dashboard/browse-events",
-          icon: <Search size={16} />,
-        },
-        {
-          label: "Create Event",
-          href: "/dashboard/events",
-          icon: <Plus size={16} />,
-          roles: ["organizer", "admin"],
-        },
+        { label: "Browse Events", href: "/dashboard/browse-events", icon: <Search size={16} /> },
+        { label: "Create Event", href: "/dashboard/events", icon: <Plus size={16} />, roles: ["organizer", "admin"] },
       ],
     },
     userRole === "player"
-      ? {
-          label: "Joined Events",
-          href: "/dashboard/joined-events",
-          icon: <Calendar size={20} />,
-        }
-      : {
-          label: "Created Events",
-          href: "/dashboard/created-events",
-          icon: <Calendar size={20} />,
-        },
-
+      ? { label: "Joined Events", href: "/dashboard/joined-events", icon: <Calendar size={20} /> }
+      : { label: "Created Events", href: "/dashboard/created-events", icon: <Calendar size={20} /> },
     { label: "Teams", href: "/dashboard/teams", icon: <Users size={20} /> },
-
-    // 👇 ADD INVITES DROPDOWN FOR PLAYER ONLY
     userRole === "player" && {
       label: "Invites",
       icon: <Mail size={20} />,
       submenu: [
-        {
-          label: "All Invites",
-          href: "/dashboard/teams/invites",
-          icon: <Mail size={16} />,
-        },
-        {
-          label: "Paid Invites",
-          href: "/dashboard/teams/paid-invites",
-          icon: <CheckCircle size={16} />,
-        },
-        {
-          label: "Unpaid Invites",
-          href: "/dashboard/teams/unpaid-invites",
-          icon: <Calendar size={16} />,
-        },
+        { label: "All Invites", href: "/dashboard/teams/invites", icon: <Mail size={16} /> },
+        { label: "Paid Invites", href: "/dashboard/teams/paid-invites", icon: <CheckCircle size={16} /> },
+        { label: "Unpaid Invites", href: "/dashboard/teams/unpaid-invites", icon: <Calendar size={16} /> },
       ],
     },
-
-    {
-      label: "Profile",
-      href: "/dashboard/profile",
-      icon: <Settings size={20} />,
-    },
-    {
-      label: "Payments",
-      href: "/dashboard/payments",
-      icon: <Calendar size={20} />,
-      roles: ["organizer", "admin"],
-    },
-    {
-      label: "Verify Ticket",
-      href: "/dashboard/events/verify",
-      icon: <CheckCircle size={20} />,
-      roles: ["organizer", "admin"],
-    },
-    {
-      label: "Settings",
-      href: "/dashboard/settings",
-      icon: <Settings size={20} />,
-    },
+    { label: "Profile", href: "/dashboard/profile", icon: <Settings size={20} /> },
+    { label: "Payments", href: "/dashboard/payments", icon: <Calendar size={20} />, roles: ["organizer", "admin"] },
+    { label: "Verify Ticket", href: "/dashboard/events/verify", icon: <CheckCircle size={20} />, roles: ["organizer", "admin"] },
+    { label: "Settings", href: "/dashboard/settings", icon: <Settings size={20} /> },
   ];
 
   const filteredLinks = links
     .map((link) => {
       if (!link) return null;
       if (link.submenu) {
-        const submenu = link.submenu.filter(
-          (sub) => !sub.roles || sub.roles.includes(userRole || "")
-        );
+        const submenu = link.submenu.filter((sub) => !sub.roles || sub.roles.includes(userRole));
         return submenu.length ? { ...link, submenu } : null;
       }
-      return !link.roles || link.roles.includes(userRole || "") ? link : null;
+      return !link.roles || link.roles.includes(userRole) ? link : null;
     })
-    .filter(Boolean) as typeof links;
+    .filter(Boolean);
+
+  const handleLinkClick = () => {
+    if (window.innerWidth < 1024) setIsOpen(false);
+  };
 
   return (
-    <nav className="space-y-2">
-      {filteredLinks.map(({ label, href, icon, submenu }) =>
-        submenu ? (
-          <div key={label} className="space-y-1">
-            <button
-              onClick={() =>
-                setOpenDropdown(openDropdown === label ? null : label)
-              }
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all ${
-                openDropdown === label ||
-                submenu.some((item) => pathname === item.href)
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span
-                  className={`${
-                    openDropdown === label ||
-                    submenu.some((item) => pathname === item.href)
-                      ? "text-blue-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {icon}
-                </span>
-                <span className="font-medium">{label}</span>
-              </div>
-              {openDropdown === label ? (
-                <ChevronUp size={18} className="text-gray-500" />
-              ) : (
-                <ChevronDown size={18} className="text-gray-500" />
-              )}
-            </button>
+    <nav className="flex h-full flex-col justify-between px-4 pb-6">
+      <div className="space-y-2">
+        {filteredLinks.map(({ label, href, icon, submenu }) =>
+          submenu ? (
+            <div key={label} className="space-y-1">
+              <button
+                onClick={() => setOpenDropdown(openDropdown === label ? null : label)}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 ${
+                  openDropdown === label ||
+                  submenu.some((item) => pathname === item.href)
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-500">{icon}</span>
+                  <span className="font-medium">{label}</span>
+                </div>
+                {openDropdown === label ? (
+                  <ChevronUp size={18} className="text-gray-500" />
+                ) : (
+                  <ChevronDown size={18} className="text-gray-500" />
+                )}
+              </button>
 
-            <AnimatePresence>
               {openDropdown === label && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden pl-11 space-y-1"
-                >
-                  {submenu.map(({ label: subLabel, href, icon: subIcon }) => (
+                <div className="space-y-1 pl-11">
+                  {submenu.map((subItem) => (
                     <Link
-                      key={href}
-                      href={href}
-                      onClick={() => setIsOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
-                        pathname === href
-                          ? "bg-blue-100 text-blue-600 font-medium"
+                      key={subItem.href}
+                      href={subItem.href}
+                      onClick={handleLinkClick}
+                      className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${
+                        pathname === subItem.href
+                          ? "bg-blue-100 font-medium text-blue-600"
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      {subIcon && (
-                        <span className="text-gray-500">{subIcon}</span>
-                      )}
-                      {subLabel}
+                      {subItem.icon && <span className="text-gray-500">{subItem.icon}</span>}
+                      {subItem.label}
                     </Link>
                   ))}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-        ) : (
-          <Link
-            key={href}
-            href={href!}
-            onClick={() => setIsOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition ${
-              pathname === href
-                ? "bg-blue-50 text-blue-600 font-medium"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <span
-              className={pathname === href ? "text-blue-500" : "text-gray-500"}
+            </div>
+          ) : (
+            <Link
+              key={href}
+              href={href!}
+              onClick={handleLinkClick}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${
+                pathname === href
+                  ? "bg-blue-50 font-medium text-blue-600"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
             >
-              {icon}
-            </span>
-            <span className="font-medium">{label}</span>
-          </Link>
-        )
-      )}
+              <span className="text-gray-500">{icon}</span>
+              <span className="font-medium">{label}</span>
+            </Link>
+          )
+        )}
+      </div>
 
-      <div className="pt-4 mt-4 border-t border-gray-200">
-        <button
-          onClick={() => alert("Stay with us! This feature is coming soon.")}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-        >
-          <LogOut size={20} className="text-red-400" />
-          <span className="font-medium">Sign out</span>
-        </button>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+       <button
+  onClick={() => signOut({ callbackUrl: "/" })}
+  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-red-500 hover:bg-red-50"
+>
+  <LogOut size={20} className="text-red-400" />
+  <span className="font-medium">Sign out</span>
+</button>
+
       </div>
     </nav>
   );

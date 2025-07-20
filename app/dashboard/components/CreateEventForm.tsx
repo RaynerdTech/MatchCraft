@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Calendar, Clock, MapPin, AlertCircle, Image as ImageIcon, Wind, PartyPopper, CheckCircle2 } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  AlertCircle,
+  Image as ImageIcon,
+  Wind,
+  PartyPopper,
+  CheckCircle2,
+} from "lucide-react";
 
 type Props = {
   userId: string;
@@ -11,18 +20,28 @@ type Props = {
 };
 
 // --- Helper Components ---
-const InputField = ({ icon: Icon, children, error }: { icon: React.ElementType, children: React.ReactNode, error?: boolean }) => (
-  <div className={`flex items-center bg-gray-50 border ${error ? 'border-red-400' : 'border-gray-200'} rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400`}>
-    <Icon className={`h-5 w-5 ${error ? 'text-red-500' : 'text-gray-400'}`} />
-    <div className="flex-grow ml-3">
-      {children}
-    </div>
+const InputField = ({
+  icon: Icon,
+  children,
+  error,
+}: {
+  icon: React.ElementType;
+  children: React.ReactNode;
+  error?: boolean;
+}) => (
+  <div
+    className={`flex items-center bg-gray-50 border ${
+      error ? "border-red-400" : "border-gray-200"
+    } rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400`}
+  >
+    <Icon className={`h-5 w-5 ${error ? "text-red-500" : "text-gray-400"}`} />
+    <div className="flex-grow ml-3">{children}</div>
   </div>
 );
 
 const timeToMinutes = (timeStr: string): number => {
   if (!timeStr) return 0;
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
   return hours * 60 + minutes;
 };
 
@@ -38,12 +57,12 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [formData, setFormData] = useState({
-    title: '',
-    location: '',
-    date: '',
-    time: '',
-    endTime: '',
-    description: '',
+    title: "",
+    location: "",
+    date: "",
+    time: "",
+    endTime: "",
+    description: "",
     pricePerPlayer: 0,
     slots: 10,
     image: null as File | null,
@@ -63,11 +82,11 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
   // --- Persistence Logic ---
   useEffect(() => {
-    const savedFormData = sessionStorage.getItem('eventFormData');
+    const savedFormData = sessionStorage.getItem("eventFormData");
     if (savedFormData) {
       try {
         const parsed = JSON.parse(savedFormData);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           ...parsed,
           // We don't restore the File object, but we keep the preview URL
@@ -78,7 +97,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
         console.error("Failed to parse saved form data:", err);
       }
     }
-    
+
     // Drag and Drop Event Listeners
     const dropArea = dropAreaRef.current;
     if (!dropArea) return;
@@ -88,18 +107,20 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       e.stopPropagation();
     };
 
-    const highlight = () => dropArea.classList.add('border-blue-500', 'bg-blue-50');
-    const unhighlight = () => dropArea.classList.remove('border-blue-500', 'bg-blue-50');
+    const highlight = () =>
+      dropArea.classList.add("border-blue-500", "bg-blue-50");
+    const unhighlight = () =>
+      dropArea.classList.remove("border-blue-500", "bg-blue-50");
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
       dropArea.addEventListener(eventName, preventDefaults, false);
     });
 
-    ['dragenter', 'dragover'].forEach(eventName => {
+    ["dragenter", "dragover"].forEach((eventName) => {
       dropArea.addEventListener(eventName, highlight, false);
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
+    ["dragleave", "drop"].forEach((eventName) => {
       dropArea.addEventListener(eventName, unhighlight, false);
     });
 
@@ -111,19 +132,19 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       }
     };
 
-    dropArea.addEventListener('drop', handleDrop, false);
+    dropArea.addEventListener("drop", handleDrop, false);
 
     return () => {
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
         dropArea.removeEventListener(eventName, preventDefaults, false);
       });
-      ['dragenter', 'dragover'].forEach(eventName => {
+      ["dragenter", "dragover"].forEach((eventName) => {
         dropArea.removeEventListener(eventName, highlight, false);
       });
-      ['dragleave', 'drop'].forEach(eventName => {
+      ["dragleave", "drop"].forEach((eventName) => {
         dropArea.removeEventListener(eventName, unhighlight, false);
       });
-      dropArea.removeEventListener('drop', handleDrop, false);
+      dropArea.removeEventListener("drop", handleDrop, false);
     };
   }, []);
 
@@ -132,10 +153,13 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     const handler = setTimeout(() => {
       const { image, ...dataToSave } = formData;
       // Include the preview URL in the saved data
-      sessionStorage.setItem('eventFormData', JSON.stringify({
-        ...dataToSave,
-        preview: formData.preview
-      }));
+      sessionStorage.setItem(
+        "eventFormData",
+        JSON.stringify({
+          ...dataToSave,
+          preview: formData.preview,
+        })
+      );
     }, 300);
 
     return () => {
@@ -146,17 +170,17 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   // --- Form Validation ---
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
-    
+
     if (!formData.title) newErrors.title = "Event title is required";
     if (!formData.location) newErrors.location = "Location is required";
     if (!formData.date) newErrors.date = "Please select a date";
     if (!formData.time) newErrors.time = "Please select a time";
     if (!formData.endTime) newErrors.endTime = "Please select an end time";
     // Replace the time comparison in validateForm with:
- if (formData.time && formData.endTime) {
+    if (formData.time && formData.endTime) {
       const startMinutes = timeToMinutes(formData.time);
       const endMinutes = timeToMinutes(formData.endTime);
-      
+
       if (startMinutes >= endMinutes) {
         newErrors.endTime = "End time must be after start time";
       }
@@ -170,59 +194,76 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
   // --- File Handling ---
   const handleFile = (file: File) => {
-    if (!file.type.match('image.*')) {
-      setErrors(prev => ({ ...prev, image: 'Please select an image file (JPEG, PNG, GIF)' }));
+    if (!file.type.match("image.*")) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Please select an image file (JPEG, PNG, GIF)",
+      }));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, image: 'Image size should not exceed 5MB' }));
+      setErrors((prev) => ({
+        ...prev,
+        image: "Image size should not exceed 5MB",
+      }));
       return;
     }
 
-    setErrors(prev => ({ ...prev, image: '' }));
-    setFormData(prev => ({ ...prev, image: file }));
-    
+    setErrors((prev) => ({ ...prev, image: "" }));
+    setFormData((prev) => ({ ...prev, image: file }));
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const previewUrl = reader.result as string;
-      setFormData(prev => ({ ...prev, preview: previewUrl }));
+      setFormData((prev) => ({ ...prev, preview: previewUrl }));
     };
     reader.onerror = () => {
-      setErrors(prev => ({ ...prev, image: 'Failed to process image' }));
+      setErrors((prev) => ({ ...prev, image: "Failed to process image" }));
     };
     reader.readAsDataURL(file);
   };
 
   // --- Location Autocomplete ---
-  const handleLocationChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchText = e.target.value;
-    setFormData(prev => ({ ...prev, location: searchText }));
-    setErrors(prev => ({ ...prev, location: '' }));
+  const handleLocationChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const searchText = e.target.value;
+      setFormData((prev) => ({ ...prev, location: searchText }));
+      setErrors((prev) => ({ ...prev, location: "" }));
 
-    if (searchText.length < 3) {
-      setSuggestions([]);
-      setIsLocationLoading(false);
-      return;
-    }
+      if (searchText.length < 3) {
+        setSuggestions([]);
+        setIsLocationLoading(false);
+        return;
+      }
 
-    setIsLocationLoading(true);
-    try {
-      const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${searchText}&apiKey=${GEOAPIFY_API_KEY}`);
-      if (!res.ok) throw new Error(`Geoapify API error: ${res.statusText}`);
-      const data = await res.json();
-      setSuggestions(data.features || []);
-    } catch (err) {
-      console.error("Failed to fetch location suggestions", err);
-      setErrors(prev => ({ ...prev, location: 'Failed to fetch locations' }));
-    } finally {
-      setIsLocationLoading(false);
-    }
-  }, [GEOAPIFY_API_KEY]);
+      setIsLocationLoading(true);
+      try {
+        const res = await fetch(
+          `https://api.geoapify.com/v1/geocode/autocomplete?text=${searchText}&apiKey=${GEOAPIFY_API_KEY}`
+        );
+        if (!res.ok) throw new Error(`Geoapify API error: ${res.statusText}`);
+        const data = await res.json();
+        setSuggestions(data.features || []);
+      } catch (err) {
+        console.error("Failed to fetch location suggestions", err);
+        setErrors((prev) => ({
+          ...prev,
+          location: "Failed to fetch locations",
+        }));
+      } finally {
+        setIsLocationLoading(false);
+      }
+    },
+    [GEOAPIFY_API_KEY]
+  );
 
   const handleSuggestionClick = (suggestion: any) => {
-    setFormData(prev => ({ ...prev, location: suggestion.properties.formatted }));
-    setErrors(prev => ({ ...prev, location: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      location: suggestion.properties.formatted,
+    }));
+    setErrors((prev) => ({ ...prev, location: "" }));
     setSuggestions([]);
   };
 
@@ -237,13 +278,13 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result;
-        if (typeof result === 'string') {
+        if (typeof result === "string") {
           resolve(result);
         } else {
-          reject(new Error('Failed to convert image to base64'));
+          reject(new Error("Failed to convert image to base64"));
         }
       };
-      reader.onerror = () => reject(new Error('Error reading file'));
+      reader.onerror = () => reject(new Error("Error reading file"));
       reader.readAsDataURL(file);
     });
   };
@@ -251,7 +292,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   // --- Form Submission ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return;
@@ -259,18 +300,18 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
     // If we have a preview but no File object (from session storage)
     if (formData.preview && !formData.image) {
-      setErrors(prev => ({ ...prev, image: 'Please re-upload your image' }));
+      setErrors((prev) => ({ ...prev, image: "Please re-upload your image" }));
       return;
     }
 
     setLoading(true);
 
     try {
-      const imageBase64 = formData.preview || await toBase64(formData.image!);
+      const imageBase64 = formData.preview || (await toBase64(formData.image!));
 
-      const response = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: formData.title,
           location: formData.location,
@@ -283,7 +324,8 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
           imageBase64,
           userId,
           teamOnly: formData.teamOnly,
-          allowFreePlayersIfTeamIncomplete: formData.allowFreePlayersIfTeamIncomplete,
+          allowFreePlayersIfTeamIncomplete:
+            formData.allowFreePlayersIfTeamIncomplete,
         }),
       });
 
@@ -296,38 +338,45 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       setCreatedEventId(createdEvent._id);
 
       // Clear storage and form
-      sessionStorage.removeItem('eventFormData');
+      sessionStorage.removeItem("eventFormData");
       setFormData({
-        title: '',
-        location: '',
-        date: '',
-        time: '',
-        endTime: '',
-        description: '',
+        title: "",
+        location: "",
+        date: "",
+        time: "",
+        endTime: "",
+        description: "",
         pricePerPlayer: 0,
         slots: 10,
         image: null,
         preview: null,
         teamOnly: formData.teamOnly,
-        allowFreePlayersIfTeamIncomplete: formData.allowFreePlayersIfTeamIncomplete,
+        allowFreePlayersIfTeamIncomplete:
+          formData.allowFreePlayersIfTeamIncomplete,
       });
 
       // Show success modal
       setShowSuccessModal(true);
     } catch (err: any) {
       console.error("Event creation error:", err);
-      setErrors(prev => ({ ...prev, form: err.message || 'An unexpected error occurred' }));
+      setErrors((prev) => ({
+        ...prev,
+        form: err.message || "An unexpected error occurred",
+      }));
     } finally {
       setLoading(false);
     }
   };
 
   // --- UI Helpers ---
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (locationInputRef.current && !locationInputRef.current.contains(event.target as Node)) {
+      if (
+        locationInputRef.current &&
+        !locationInputRef.current.contains(event.target as Node)
+      ) {
         setSuggestions([]);
       }
     };
@@ -343,7 +392,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
         <div className="w-full max-w-3xl">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Form Header */}
@@ -351,11 +400,17 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
               <h1 className="text-2xl md:text-4xl font-bold text-white">
                 Create Your Next Event
               </h1>
-              <p className="mt-2 text-blue-100">Fill in the details to create an unforgettable experience</p>
+              <p className="mt-2 text-blue-100">
+                Fill in the details to create an unforgettable experience
+              </p>
             </div>
 
             {/* Form Content */}
-            <form ref={formRef} onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className="p-6 md:p-8 space-y-6"
+            >
               {errors.form && (
                 <div className="flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg shadow-sm">
                   <AlertCircle className="h-5 w-5 mr-3" />
@@ -366,7 +421,12 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
               <div className="space-y-6">
                 {/* Title Field */}
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">Event Title</label>
+                  <label
+                    htmlFor="title"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Event Title
+                  </label>
                   <InputField icon={Wind} error={!!errors.title}>
                     <input
                       id="title"
@@ -374,18 +434,30 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       placeholder="What's your event called?"
                       value={formData.title}
                       onChange={(e) => {
-                        setFormData(prev => ({ ...prev, title: e.target.value }));
-                        setErrors(prev => ({ ...prev, title: '' }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }));
+                        setErrors((prev) => ({ ...prev, title: "" }));
                       }}
                       className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
                     />
                   </InputField>
-                  {errors.title && <p className="text-red-500 text-xs mt-1 ml-1">{errors.title}</p>}
+                  {errors.title && (
+                    <p className="text-red-500 text-xs mt-1 ml-1">
+                      {errors.title}
+                    </p>
+                  )}
                 </div>
 
                 {/* Location Field */}
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <label
+                    htmlFor="location"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Location
+                  </label>
                   <div className="relative" ref={locationInputRef}>
                     <InputField icon={MapPin} error={!!errors.location}>
                       <input
@@ -408,102 +480,157 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                             onClick={() => handleSuggestionClick(suggestion)}
                             className="px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
                           >
-                            <div className="font-medium text-gray-800">{suggestion.properties.address_line1}</div>
-                            <div className="text-sm text-gray-500">{suggestion.properties.address_line2}</div>
+                            <div className="font-medium text-gray-800">
+                              {suggestion.properties.address_line1}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {suggestion.properties.address_line2}
+                            </div>
                           </li>
                         ))}
                       </ul>
                     )}
                   </div>
-                  {errors.location && <p className="text-red-500 text-xs mt-1 ml-1">{errors.location}</p>}
+                  {errors.location && (
+                    <p className="text-red-500 text-xs mt-1 ml-1">
+                      {errors.location}
+                    </p>
+                  )}
                 </div>
 
                 {/* Date & Time Fields */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <label
+                      htmlFor="date"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Date
+                    </label>
                     <InputField icon={Calendar} error={!!errors.date}>
                       <input
                         id="date"
                         type="date"
                         value={formData.date}
                         onChange={(e) => {
-                          setFormData(prev => ({ ...prev, date: e.target.value }));
-                          setErrors(prev => ({ ...prev, date: '' }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            date: e.target.value,
+                          }));
+                          setErrors((prev) => ({ ...prev, date: "" }));
                         }}
                         min={today}
                         className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
                       />
                     </InputField>
-                    {errors.date && <p className="text-red-500 text-xs mt-1 ml-1">{errors.date}</p>}
+                    {errors.date && (
+                      <p className="text-red-500 text-xs mt-1 ml-1">
+                        {errors.date}
+                      </p>
+                    )}
                   </div>
 
-                 <div>
-          <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
-          <InputField icon={Clock} error={!!errors.time}>
-            <input
-              id="time"
-              type="time"
-              value={formData.time}
-              onChange={(e) => {
-                const newTime = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  time: newTime,
-                  // Clear end time if it's now invalid
-                  ...(timeToMinutes(newTime) >= timeToMinutes(prev.endTime) 
-                    ? { endTime: '' } 
-                    : {})
-                }));
-                setErrors(prev => ({
-                  ...prev,
-                  time: '',
-                  endTime: timeToMinutes(newTime) >= timeToMinutes(formData.endTime)
-                    ? "End time must be after start time"
-                    : prev.endTime
-                }));
-              }}
-              className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-            />
-          </InputField>
-          {errors.time && <p className="text-red-500 text-xs mt-1 ml-1">{errors.time}</p>}
-        </div>
+                  <div>
+                    <label
+                      htmlFor="time"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Start Time
+                    </label>
+                    <InputField icon={Clock} error={!!errors.time}>
+                      <input
+                        id="time"
+                        type="time"
+                        value={formData.time}
+                        onChange={(e) => {
+                          const newTime = e.target.value;
+                          setFormData((prev) => ({
+                            ...prev,
+                            time: newTime,
+                            // Clear end time if it's now invalid
+                            ...(timeToMinutes(newTime) >=
+                            timeToMinutes(prev.endTime)
+                              ? { endTime: "" }
+                              : {}),
+                          }));
+                          setErrors((prev) => ({
+                            ...prev,
+                            time: "",
+                            endTime:
+                              timeToMinutes(newTime) >=
+                              timeToMinutes(formData.endTime)
+                                ? "End time must be after start time"
+                                : prev.endTime,
+                          }));
+                        }}
+                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                      />
+                    </InputField>
+                    {errors.time && (
+                      <p className="text-red-500 text-xs mt-1 ml-1">
+                        {errors.time}
+                      </p>
+                    )}
+                  </div>
 
-        {/* End Time Field */}
-        <div>
-          <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
-          <InputField icon={Clock} error={!!errors.endTime}>
-            <input
-              id="endTime"
-              type="time"
-              value={formData.endTime}
-              onChange={(e) => {
-                const newEndTime = e.target.value;
-                setFormData(prev => ({ ...prev, endTime: newEndTime }));
-                setErrors(prev => ({
-                  ...prev,
-                  endTime: timeToMinutes(formData.time) >= timeToMinutes(newEndTime)
-                    ? "End time must be after start time"
-                    : ''
-                }));
-              }}
-              className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
-            />
-          </InputField>
-          {errors.endTime && <p className="text-red-500 text-xs mt-1 ml-1">{errors.endTime}</p>}
-        </div>
-    
+                  {/* End Time Field */}
+                  <div>
+                    <label
+                      htmlFor="endTime"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      End Time
+                    </label>
+                    <InputField icon={Clock} error={!!errors.endTime}>
+                      <input
+                        id="endTime"
+                        type="time"
+                        value={formData.endTime}
+                        onChange={(e) => {
+                          const newEndTime = e.target.value;
+                          setFormData((prev) => ({
+                            ...prev,
+                            endTime: newEndTime,
+                          }));
+                          setErrors((prev) => ({
+                            ...prev,
+                            endTime:
+                              timeToMinutes(formData.time) >=
+                              timeToMinutes(newEndTime)
+                                ? "End time must be after start time"
+                                : "",
+                          }));
+                        }}
+                        className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                      />
+                    </InputField>
+                    {errors.endTime && (
+                      <p className="text-red-500 text-xs mt-1 ml-1">
+                        {errors.endTime}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description Field */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Description
+                  </label>
                   <div className="relative">
                     <textarea
                       id="description"
                       placeholder="Tell people what to expect at your event..."
                       value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       rows={5}
                       maxLength={1000}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 text-gray-900 placeholder-gray-400 resize-none transition-all"
@@ -516,7 +643,10 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
                 {/* Price Per Player Field */}
                 <div>
-                  <label htmlFor="pricePerPlayer" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="pricePerPlayer"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Price Per Player (₦)
                   </label>
                   <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
@@ -528,7 +658,12 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       step="100"
                       placeholder="Enter amount"
                       value={formData.pricePerPlayer}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pricePerPlayer: Number(e.target.value) }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          pricePerPlayer: Number(e.target.value),
+                        }))
+                      }
                       className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 ml-2"
                     />
                   </div>
@@ -539,7 +674,10 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
                 {/* Slots Field */}
                 <div>
-                  <label htmlFor="slots" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="slots"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Available Slots
                   </label>
                   <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
@@ -549,7 +687,12 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       min="1"
                       placeholder="Number of available spots"
                       value={formData.slots}
-                      onChange={(e) => setFormData(prev => ({ ...prev, slots: Number(e.target.value) }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          slots: Number(e.target.value),
+                        }))
+                      }
                       className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
                     />
                   </div>
@@ -559,46 +702,70 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                 </div>
 
                 {/* Team-Only Toggle */}
-<div className="flex items-center space-x-2">
-  <input
-    type="checkbox"
-    id="teamOnly"
-    checked={formData.teamOnly}
-    onChange={(e) => setFormData(prev => ({ ...prev, teamOnly: e.target.checked }))}
-    className="w-5 h-5"
-  />
-  <label htmlFor="teamOnly" className="text-sm text-gray-700">Team-only event (players must join in teams)</label>
-</div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="teamOnly"
+                    checked={formData.teamOnly}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        teamOnly: e.target.checked,
+                      }))
+                    }
+                    className="w-5 h-5"
+                  />
+                  <label htmlFor="teamOnly" className="text-sm text-gray-700">
+                    Team-only event (players must join in teams)
+                  </label>
+                </div>
 
-{/* Allow Free Players Fallback */}
-{formData.teamOnly && (
-  <div className="flex items-center space-x-2 ml-6 mt-2">
-    <input
-      type="checkbox"
-      id="allowFreePlayers"
-      checked={formData.allowFreePlayersIfTeamIncomplete}
-      onChange={(e) =>
-        setFormData(prev => ({
-          ...prev,
-          allowFreePlayersIfTeamIncomplete: e.target.checked,
-        }))
-      }
-      className="w-5 h-5"
-    />
-    <label htmlFor="allowFreePlayers" className="text-sm text-gray-700">
-      Allow free players to fill team slots if team incomplete
-    </label>
-  </div>
-)}
-
+                {/* Allow Free Players Fallback */}
+                {formData.teamOnly && (
+                  <div className="flex items-center space-x-2 ml-6 mt-2">
+                    <input
+                      type="checkbox"
+                      id="allowFreePlayers"
+                      checked={formData.allowFreePlayersIfTeamIncomplete}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          allowFreePlayersIfTeamIncomplete: e.target.checked,
+                        }))
+                      }
+                      className="w-5 h-5"
+                    />
+                    <label
+                      htmlFor="allowFreePlayers"
+                      className="text-sm text-gray-700"
+                    >
+                      Allow free players to fill team slots if team incomplete
+                    </label>
+                  </div>
+                )}
 
                 {/* Image Upload */}
                 <div>
-                  <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">Event Banner</label>
+                  <label
+                    htmlFor="file-upload"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Event Banner
+                  </label>
                   <div
                     ref={dropAreaRef}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center border-2 ${errors.image ? 'border-red-500' : formData.preview ? 'border-gray-200' : 'border-dashed border-gray-300'} rounded-2xl p-6 cursor-pointer transition-all ${formData.preview ? 'bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}`}
+                    className={`flex flex-col items-center justify-center border-2 ${
+                      errors.image
+                        ? "border-red-500"
+                        : formData.preview
+                        ? "border-gray-200"
+                        : "border-dashed border-gray-300"
+                    } rounded-2xl p-6 cursor-pointer transition-all ${
+                      formData.preview
+                        ? "bg-gray-50"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    }`}
                   >
                     {formData.preview ? (
                       <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
@@ -612,12 +779,35 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <ImageIcon className={`h-12 w-12 ${errors.image ? 'text-red-500' : 'text-gray-400'} mb-3`} />
+                        <ImageIcon
+                          className={`h-12 w-12 ${
+                            errors.image ? "text-red-500" : "text-gray-400"
+                          } mb-3`}
+                        />
                         <div className="text-center">
-                          <p className={`text-sm font-medium ${errors.image ? 'text-red-600' : 'text-gray-600'}`}>
-                            <span className={errors.image ? 'text-red-600 underline' : 'text-gray-700 underline'}>Upload a file</span> or drag and drop
+                          <p
+                            className={`text-sm font-medium ${
+                              errors.image ? "text-red-600" : "text-gray-600"
+                            }`}
+                          >
+                            <span
+                              className={
+                                errors.image
+                                  ? "text-red-600 underline"
+                                  : "text-gray-700 underline"
+                              }
+                            >
+                              Upload a file
+                            </span>{" "}
+                            or drag and drop
                           </p>
-                          <p className={`text-xs ${errors.image ? 'text-red-400' : 'text-gray-400'} mt-1`}>PNG, JPG, GIF up to 5MB</p>
+                          <p
+                            className={`text-xs ${
+                              errors.image ? "text-red-400" : "text-gray-400"
+                            } mt-1`}
+                          >
+                            PNG, JPG, GIF up to 5MB
+                          </p>
                         </div>
                       </div>
                     )}
@@ -631,7 +821,11 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                       onChange={handleImageChange}
                     />
                   </div>
-                  {errors.image && <p className="text-red-500 text-xs mt-1 ml-1">{errors.image}</p>}
+                  {errors.image && (
+                    <p className="text-red-500 text-xs mt-1 ml-1">
+                      {errors.image}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -647,7 +841,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                     Creating Event...
                   </>
                 ) : (
-                  'Create Event'
+                  "Create Event"
                 )}
               </button>
             </form>
@@ -661,17 +855,23 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md">
             <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center text-white">
               <PartyPopper className="h-12 w-12 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold">Event Created Successfully!</h2>
-              <p className="mt-2 opacity-90">Your event is now live and ready for participants</p>
+              <h2 className="text-2xl font-bold">
+                Event Created Successfully!
+              </h2>
+              <p className="mt-2 opacity-90">
+                Your event is now live and ready for participants
+              </p>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-center text-green-600">
                 <CheckCircle2 className="h-6 w-6 mr-2" />
-                <span className="font-medium">All details saved successfully</span>
+                <span className="font-medium">
+                  All details saved successfully
+                </span>
               </div>
               <div className="flex space-x-4 pt-4">
                 <button
-                  onClick={() => router.push('/dashboard/browse-events')}
+                  onClick={() => router.push("/dashboard/browse-events")}
                   className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors"
                 >
                   Browse Events
