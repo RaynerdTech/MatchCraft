@@ -260,7 +260,7 @@ function NavLinks({ setIsOpen }: { setIsOpen: (v: boolean) => void }) {
         )}
       </div>
 
-      <div className="border-t border-gray-200 pt-4 mt-4 pb-10">
+      <div className="border-t border-gray-200 pt-4 mt-4 pb-20">
         {/* Added `pb-10` to push up logout on mobile */}
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
