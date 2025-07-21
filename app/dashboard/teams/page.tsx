@@ -37,16 +37,16 @@ export default function MyTeamPage() {
 
   if (!team)
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <div className="text-center p-6 max-w-md">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            No Team Found
-          </h1>
-          <p className="text-gray-600">
-            We couldn't find any team associated with your account.
-          </p>
-        </div>
-      </div>
+   <div className="min-h-dvh flex items-center justify-center bg-gray-50 px-4">
+  <div className="text-center p-8 bg-white rounded-lg border border-gray-100 shadow-xs max-w-md w-full">
+    <h1 className="text-2xl font-medium text-gray-900 mb-3 leading-tight">
+      No Team Found
+    </h1>
+    <p className="text-gray-600">
+      We couldn't find any team associated with your account.
+    </p>
+  </div>
+</div>
     );
 
   const eventDate = new Date(team.event.date);

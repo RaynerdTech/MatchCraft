@@ -38,21 +38,20 @@ export default function CreateEventPage() {
     return <AccessDenied />;
   }
 
-  return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Create New Event</h1>
-      <p className="text-gray-600 mb-6">
-        Fill out the form below to list your event
-      </p>
+ // The form is now a direct child of the main layout container
+return (
+  <div className="max-w-3xl mx-auto px-4 sm:px-6">
+    <h1 className="text-2xl font-bold mb-2">Create New Event</h1>
+    <p className="text-gray-600 mb-6">
+      Fill out the form below to list your event
+    </p>
 
-      <div className="bg-white border border-gray-200 rounded-lg">
-        <CreateEventForm
-          userId={user._id}
-          onSuccess={() => router.push('/events')}
-        />
-      </div>
-    </div>
-  );
+    <CreateEventForm
+      userId={user._id}
+      onSuccess={() => router.push('/events')}
+    />
+  </div>
+);
 }
 
 function LoadingSkeleton() {

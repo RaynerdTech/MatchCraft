@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       time,
       endTime, // Include endTime in the created event
       location,
-      pricePerPlayer: pricePerPlayer || 0,
+      pricePerPlayer: pricePerPlayer || 1000,
       slots,
       createdBy: user._id,
       image: imageUrl,

@@ -25,6 +25,8 @@ import toast from "react-hot-toast";
 import EventDrawer from "../events/EventDrawer";
 import { useSession } from "next-auth/react";
 
+
+
 const SkeletonCard = () => (
   <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse h-full transition-all duration-300 hover:shadow-xl">
     <div className="w-full h-48 bg-gradient-to-r from-gray-100 to-gray-200"></div>
@@ -96,8 +98,8 @@ const EventsClientUI = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { data: session } = useSession();
-
+  const { data: session, status } = useSession();
+  
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -354,19 +356,20 @@ const EventsClientUI = () => {
     }
   };
 
-  const handleEventClick = (event: Event) => {
-    // Don't proceed if event is ended or ongoing
-    if (event.status === "ended" || event.status === "ongoing") {
-      return;
-    }
+const handleEventClick = (event: Event) => {
+  // Don't proceed if event is ended or ongoing
+  if (event.status === "ended" || event.status === "ongoing") {
+    return;
+  }
 
- if (event.isAvailable) {
-   if (event.teamOnly || event.allowFreePlayersIfTeamIncomplete) {
-      if (session?.user) {
-        // user is logged in
+  if (event.isAvailable) {
+    if (event.teamOnly || event.allowFreePlayersIfTeamIncomplete) {
+      // Check if user is authenticated
+      if (status === "authenticated") {
+        // User is logged in, proceed directly
         router.push(`/dashboard/teams/${event._id}`);
       } else {
-        // user not logged in, show toast
+        // Show toast with login prompt
         toast.custom((t) => (
           <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} 
             max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
@@ -403,14 +406,13 @@ const EventsClientUI = () => {
         });
       }
     } else {
-      // fallback logic if it's not team-only event
+      setSelectedEvent(event);
       const params = new URLSearchParams(searchParams.toString());
       params.set("event", event._id);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }
 };
-
   const handleCloseDrawer = () => {
     setSelectedEvent(null);
   };
@@ -466,7 +468,7 @@ const EventsClientUI = () => {
   const numberOfSkeletons = 8;
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-3xl mb-8 sm:mb-12 shadow-xl">
@@ -1162,4 +1164,4 @@ const EventsClientUI = () => {
   );
 };
 
-export default EventsClientUI;
+export default EventsClientUI;   

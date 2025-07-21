@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SessionProvider>
-      <div className="flex h-dvh bg-gray-50">
+      <div className="overflow-y-hidden flex h-dvh bg-gray-50">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
         <div className="flex flex-col flex-1 relative">

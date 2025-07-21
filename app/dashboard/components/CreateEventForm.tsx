@@ -176,6 +176,10 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     if (!formData.date) newErrors.date = "Please select a date";
     if (!formData.time) newErrors.time = "Please select a time";
     if (!formData.endTime) newErrors.endTime = "Please select an end time";
+
+    if (formData.pricePerPlayer > 0 && formData.pricePerPlayer < 1000) {
+    newErrors.pricePerPlayer = "Minimum price per player is ₦1000";
+  }
     // Replace the time comparison in validateForm with:
     if (formData.time && formData.endTime) {
       const startMinutes = timeToMinutes(formData.time);
@@ -392,9 +396,9 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
   return (
     <>
-      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
-        <div className="w-full max-w-3xl">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+    <div className="bg-gray-50 py-8 flex items-center justify-center">
+  <div className="w-full max-w-3xl">
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Form Header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-center">
               <h1 className="text-2xl md:text-4xl font-bold text-white">
@@ -642,35 +646,44 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                 </div>
 
                 {/* Price Per Player Field */}
-                <div>
-                  <label
-                    htmlFor="pricePerPlayer"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Price Per Player (₦)
-                  </label>
-                  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
-                    <span className="text-gray-800 font-medium">₦</span>
-                    <input
-                      id="pricePerPlayer"
+               <div>
+  <label
+    htmlFor="pricePerPlayer"
+    className="block text-sm font-medium text-gray-700 mb-2"
+  >
+    Price Per Player (₦)
+  </label>
+  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
+    <span className="text-gray-800 font-medium">₦</span>
+    <input
+      id="pricePerPlayer"
                       type="number"
-                      min="0"
-                      step="100"
-                      placeholder="Enter amount"
-                      value={formData.pricePerPlayer}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          pricePerPlayer: Number(e.target.value),
-                        }))
-                      }
-                      className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 ml-2"
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Set to 0 if the event is free to join
-                  </p>
-                </div>
+      min={formData.pricePerPlayer > 0 ? "1000" : "0"}
+      placeholder="Enter amount"
+      value={formData.pricePerPlayer}
+      onChange={(e) => {
+        const value = Number(e.target.value);
+        setFormData((prev) => ({
+          ...prev,
+          pricePerPlayer: value,
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          pricePerPlayer: value > 0 && value < 1000 ? "Minimum price is ₦1000" : "",
+        }));
+      }}
+      className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 ml-2"
+    />
+  </div>
+  {errors.pricePerPlayer && (
+    <p className="text-red-500 text-xs mt-1 ml-1">
+      {errors.pricePerPlayer}
+    </p>
+  )}
+  <p className="mt-1 text-xs text-gray-500">
+    Minimum of ₦1000 is required for the event
+  </p>
+</div>
 
                 {/* Slots Field */}
                 <div>
@@ -851,8 +864,8 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md mx-auto">
             <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center text-white">
               <PartyPopper className="h-12 w-12 mx-auto mb-4" />
               <h2 className="text-2xl font-bold">
