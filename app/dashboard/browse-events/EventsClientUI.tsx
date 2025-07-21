@@ -128,75 +128,86 @@ const EventsClientUI = () => {
     searchParams.get("slotStatus") || "all"
   );
 
-  const updateUrlParams = useCallback(
-    (
-      newSearch: string,
-      newLocation: string,
-      newDate: string,
-      newSlots: string,
-      newSlotStatus: string,
-      newTeamOnly: boolean
-    ) => {
-      const params = new URLSearchParams(searchParams.toString());
+ const updateUrlParams = useCallback(
+  (
+    newSearch: string,
+    newLocation: string,
+    newDate: string,
+    newSlots: string,
+    newSlotStatus: string,
+    newTeamOnly: boolean
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-      if (newSearch) params.set("search", newSearch);
-      else params.delete("search");
+    if (newSearch) params.set("search", newSearch);
+    else params.delete("search");
 
-      if (newLocation) params.set("location", newLocation);
-      else params.delete("location");
+    if (newLocation) params.set("location", newLocation);
+    else params.delete("location");
 
-      if (newDate) params.set("date", newDate);
-      else params.delete("date");
+    if (newDate) params.set("date", newDate);
+    else params.delete("date");
 
-      if (newSlots) params.set("slots", newSlots);
-      else params.delete("slots");
+    if (newSlots) params.set("slots", newSlots);
+    else params.delete("slots");
 
-      if (newSlotStatus && newSlotStatus !== "all")
-        params.set("slotStatus", newSlotStatus);
-      else params.delete("slotStatus");
+    if (newSlotStatus && newSlotStatus !== "all") {
+      params.set("slotStatus", newSlotStatus);
+      // Add this line to set eventStatus when slotStatus is "available"
+      if (newSlotStatus === "available") {
+        params.set("eventStatus", "available");
+      }
+    } else {
+      params.delete("slotStatus");
+      params.delete("eventStatus"); // Also delete when not needed
+    }
 
-      if (newTeamOnly) params.set("teamOnly", "true");
-      else params.delete("teamOnly");
+    if (newTeamOnly) params.set("teamOnly", "true");
+    else params.delete("teamOnly");
 
-      router.replace(`${pathname}?${params.toString()}`);
-    },
-    [searchParams, pathname, router]
-  );
+    router.replace(`${pathname}?${params.toString()}`);
+  },
+  [searchParams, pathname, router]
+);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  try {
+    setLoading(true);
+    setError("");
 
-        const search = searchParams.get("search") || "";
-        const location = searchParams.get("location") || "";
-        const date = searchParams.get("date") || "";
-        const slots = searchParams.get("slots") || "";
-        const slotStatusParam = searchParams.get("slotStatus") || "";
+    const search = searchParams.get("search") || "";
+    const location = searchParams.get("location") || "";
+    const date = searchParams.get("date") || "";
+    const slots = searchParams.get("slots") || "";
+    const slotStatusParam = searchParams.get("slotStatus") || "";
+    const eventStatusParam = searchParams.get("eventStatus") || ""; // Add this line
 
-        const params = new URLSearchParams();
-        if (search) params.append("search", search);
-        if (location) params.append("location", location);
-        if (date) params.append("date", date);
-        if (slots) params.append("slots", slots);
-        if (slotStatusParam) params.append("slotStatus", slotStatusParam);
-        if (teamOnly) params.append("teamOnly", "true");
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    if (location) params.append("location", location);
+    if (date) params.append("date", date);
+    if (slots) params.append("slots", slots);
+    if (slotStatusParam) params.append("slotStatus", slotStatusParam);
+    if (eventStatusParam) params.append("eventStatus", eventStatusParam); // Add this line
+    if (teamOnly) params.append("teamOnly", "true");
 
-        const res = await fetch(`/api/events?${params.toString()}`);
-        if (!res.ok) throw new Error("Failed to fetch events");
+    console.log('Fetching with params:', params.toString()); // Debug log
 
-        const data = await res.json();
-        setEvents(data.events || []);
-      } catch (err: any) {
-        console.error("Failed to fetch events:", err);
-        setError(
-          err.message || "An unexpected error occurred while fetching events."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+    const res = await fetch(`/api/events?${params.toString()}`);
+    if (!res.ok) throw new Error("Failed to fetch events");
+
+    const data = await res.json();
+    setEvents(data.events || []);
+  } catch (err: any) {
+    console.error("Failed to fetch events:", err);
+    setError(
+      err.message || "An unexpected error occurred while fetching events."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
     const timer = setTimeout(() => {
       fetchEvents();

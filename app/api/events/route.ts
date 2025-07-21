@@ -44,6 +44,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if pricePerPlayer is provided and is at least 1000
+    if (pricePerPlayer !== undefined && pricePerPlayer < 1000) {
+      return NextResponse.json(
+        { error: "Price per player must be at least 1000" },
+        { status: 400 }
+      );
+    }
+
     let imageUrl = "";
     if (imageBase64) {
       imageUrl = await uploadImageToCloudinary(
@@ -254,12 +262,20 @@ console.log(`Found ${events.length} team/hybrid events`);
     );
 
     // Apply slot status filter if provided
-    let filteredEvents = enrichedEvents;
-    if (slotStatus) {
-      filteredEvents = slotStatus === "available"
-        ? enrichedEvents.filter(e => e.isAvailable)
-        : enrichedEvents.filter(e => !e.isAvailable);
-    }
+  let filteredEvents = enrichedEvents;
+
+// Filter by slot availability (available / sold out)
+if (slotStatus) {
+  filteredEvents = slotStatus === "available"
+    ? enrichedEvents.filter(e => e.isAvailable)
+    : enrichedEvents.filter(e => !e.isAvailable);
+}
+
+// ✅ Filter out ended events if eventStatus is "available"
+if (eventStatus === "available") {
+  filteredEvents = filteredEvents.filter(e => e.status !== "ended");
+}
+
 
     return NextResponse.json({
       events: filteredEvents,
