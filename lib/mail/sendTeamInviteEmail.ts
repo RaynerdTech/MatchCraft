@@ -1,4 +1,6 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendTeamInviteEmail = async ({
   to,
@@ -11,19 +13,8 @@ export const sendTeamInviteEmail = async ({
   teamName: string;
   eventTitle: string;
 }) => {
- const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // upgrade later with STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-
-  const mailOptions = {
-    from: `"SoccerHub" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: "SoccerHub <onboarding@resend.dev>", // ✅ You must verify this domain or sender in Resend
     to,
     subject: `⚽ You've been invited to Team ${teamName} for ${eventTitle}`,
     html: `
@@ -52,7 +43,6 @@ export const sendTeamInviteEmail = async ({
           
           <div class="content">
             <h2 style="color: #111827; margin-top: 0;">Hello Future Teammate!</h2>
-            
             <p><strong style="color: #4f46e5;">${inviterName}</strong> has invited you to join their team for an upcoming match!</p>
             
             <div class="highlight-box">
@@ -73,7 +63,6 @@ export const sendTeamInviteEmail = async ({
             </div>
             
             <div class="divider"></div>
-            
             <p style="text-align: center; font-size: 15px;">
               <em>"Great things in soccer are never done by one player. They're done by a team of players."</em>
             </p>
@@ -87,7 +76,5 @@ export const sendTeamInviteEmail = async ({
       </body>
       </html>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
