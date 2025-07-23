@@ -158,7 +158,7 @@ export default function DashboardHome() {
           <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
             <div className="relative flex-shrink-0">
               <Image
-                src={user?.image}
+                src={user?.image || "/default-avatar.png"}
                 alt="User avatar"
                 width={80}
                 height={80}
