@@ -177,8 +177,8 @@ useEffect(() => {
       }
       setIsAnimating(false);
     } else if (result?.ok) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      router.push('/onboarding');
+      // await new Promise(resolve => setTimeout(resolve, 800));
+      router.replace('/onboarding');
     }
 
     setLoading(false);
