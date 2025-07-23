@@ -286,38 +286,51 @@ const handleSendOtp = async () => {
   setIsAnimating(true);
 
   try {
-    if (mode === 'signup') {
-  const res = await fetch('/api/auth/signup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(form),
-  });
+  if (mode === 'signup') {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
 
-  const data = await res.json();
-  if (!res.ok || data.error) {
-    throw new Error(data.error || 'Could not create account.');
-  }
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Could not create account.');
+    }
 
-  // ✅ Fix: manually sign in after signup
-  const result = await signIn('credentials', {
-    email: form.email,
-    password: form.password,
-    redirect: false,
-  });
+    // Sign in with the newly created credentials before redirecting
+    const result = await signIn('credentials', {
+      email: form.email,
+      password: form.password,
+      redirect: false,
+    });
 
-  if (result?.ok) {
-    router.push('/onboarding');
+    if (result?.ok) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      router.push('/onboarding');
+    } else {
+      throw new Error('Account created but login failed');
+    }
   } else {
-    throw new Error('Invalid email or password');
-  }
-}
+    const result = await signIn('credentials', {
+      email: form.email,
+      password: form.password,
+      redirect: false,
+    });
 
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Something went wrong.');
-    setIsAnimating(false);
-  } finally {
-    setLoading(false);
+    if (result?.ok) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      router.push('/onboarding');
+    } else {
+      throw new Error('Invalid email or password');
+    }
   }
+} catch (err) {
+  setError(err instanceof Error ? err.message : 'Something went wrong.');
+  setIsAnimating(false);
+} finally {
+  setLoading(false);
+}
 };
 
   const toggleMode = () => {
