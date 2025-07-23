@@ -287,34 +287,31 @@ const handleSendOtp = async () => {
 
   try {
     if (mode === 'signup') {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+  const res = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(form),
+  });
 
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || 'Could not create account.');
-      }
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Could not create account.');
+  }
 
-      // Directly redirect to onboarding after successful signup
-      await new Promise(resolve => setTimeout(resolve, 800));
-      router.push('/onboarding');
-    } else {
-      const result = await signIn('credentials', {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
+  // ✅ Fix: manually sign in after signup
+  const result = await signIn('credentials', {
+    email: form.email,
+    password: form.password,
+    redirect: false,
+  });
 
-      if (result?.ok) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        router.push('/onboarding');
-      } else {
-        throw new Error('Invalid email or password');
-      }
-    }
+  if (result?.ok) {
+    router.push('/onboarding');
+  } else {
+    throw new Error('Invalid email or password');
+  }
+}
+
   } catch (err) {
     setError(err instanceof Error ? err.message : 'Something went wrong.');
     setIsAnimating(false);
