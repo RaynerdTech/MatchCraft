@@ -287,6 +287,7 @@ const handleSendOtp = async () => {
 
   try {
   if (mode === 'signup') {
+    // 1. Create the user account
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -298,31 +299,38 @@ const handleSendOtp = async () => {
       throw new Error(data.error || 'Could not create account.');
     }
 
-    // Sign in with the newly created credentials before redirecting
-    const result = await signIn('credentials', {
+    // 2. Immediately sign in with the new credentials
+    const signInResult = await signIn('credentials', {
       email: form.email,
       password: form.password,
       redirect: false,
+      callbackUrl: '/onboarding' // This ensures the redirect happens after successful auth
     });
 
-    if (result?.ok) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      router.push('/onboarding');
-    } else {
+    if (signInResult?.error) {
       throw new Error('Account created but login failed');
     }
+
+    // 3. Redirect will be handled by NextAuth if signIn was successful
+    if (signInResult?.url) {
+      router.push(signInResult.url);
+    }
   } else {
+    // Handle regular sign-in
     const result = await signIn('credentials', {
       email: form.email,
       password: form.password,
       redirect: false,
+      callbackUrl: '/onboarding' // Set the redirect URL here
     });
 
-    if (result?.ok) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      router.push('/onboarding');
-    } else {
+    if (result?.error) {
       throw new Error('Invalid email or password');
+    }
+
+    // Redirect will be handled by NextAuth if signIn was successful
+    if (result?.url) {
+      router.push(result.url);
     }
   }
 } catch (err) {
