@@ -34,8 +34,14 @@ const itemVariants: Variants = {
   }),
 };
 
-// Wrapped the main component with Suspense to handle async operations
+
 function AuthPageContent() {
+
+  
+  const validateEmail = (email: string) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [form, setForm] = useState({
     email: '',
@@ -53,14 +59,54 @@ function AuthPageContent() {
   });
   const [isMounted, setIsMounted] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  // OTP Verification State
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(60);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+useEffect(() => {
+  let timer: NodeJS.Timeout;
+  if (resendDisabled && resendTimer > 0) {
+    timer = setTimeout(() => {
+      setResendTimer(resendTimer - 1);
+    }, 1000);
+  } else if (resendTimer === 0) {
+    setResendDisabled(false);
+    setResendTimer(60); // Reset the timer for next use
+  }
+  return () => {
+    if (timer) clearTimeout(timer);
+  };
+}, [resendDisabled, resendTimer]); 
+
+  // Handle OTP resend timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendDisabled && resendTimer > 0) {
+      timer = setTimeout(() => {
+        setResendTimer(resendTimer - 1);
+      }, 1000);
+    } else if (resendTimer === 0) {
+      setResendDisabled(false);
+      setResendTimer(60);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [resendDisabled, resendTimer]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -138,63 +184,153 @@ function AuthPageContent() {
     setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setIsAnimating(true);
+const handleSendOtp = async () => {
+  if (!form.email) {
+    setError('Please enter your email first');
+    return;
+  }
 
-    try {
-      if (mode === 'signup') {
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
+  if (!validateEmail(form.email)) {
+    setError('Please enter a valid email address');
+    return;
+  }
 
-        const data = await res.json();
-        if (!res.ok || data.error) {
-          throw new Error(data.error || 'Could not create account.');
-        }
+  setOtpLoading(true);
+  setOtpError('');
 
-        const signInRes = await signIn('credentials', {
-          email: form.email,
-          password: form.password,
-          redirect: false,
-        });
+  try {
+    const response = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: form.email }),
+    });
 
-        if (signInRes?.ok) {
-          await new Promise(resolve => setTimeout(resolve, 800));
-          router.push('/onboarding');
-        } else {
-          throw new Error('Account created! Please sign in.');
-        }
-      } else {
-        const result = await signIn('credentials', {
-          email: form.email,
-          password: form.password,
-          redirect: false,
-        });
+    const data = await response.json();
 
-        if (result?.ok) {
-          await new Promise(resolve => setTimeout(resolve, 800));
-          router.push('/onboarding');
-        } else {
-          throw new Error('Invalid email or password');
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
-      setIsAnimating(false);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send OTP');
+    }
+
+    setOtpSent(true);
+    setResendDisabled(true);
+    setResendTimer(60);
+  } catch (err) {
+    setOtpError(err instanceof Error ? err.message : 'Failed to send OTP');
+  } finally {
+    setOtpLoading(false);
+  }
+};
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return; // Only allow numbers
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 5 && otpInputRefs.current[index + 1]) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit if all fields are filled
+    if (newOtp.every(val => val) && newOtp.join('').length === 6) {
+      handleVerifyOtp();
     }
   };
+
+  const handleVerifyOtp = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      setOtpError('Please enter a 6-digit code');
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: form.email,
+          otp: otpCode
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'OTP verification failed');
+      }
+
+      setEmailVerified(true);
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'OTP verification failed');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (mode === 'signup' && !emailVerified) {
+    setError('Please verify your email first');
+    return;
+  }
+
+  setLoading(true);
+  setError('');
+  setIsAnimating(true);
+
+  try {
+    if (mode === 'signup') {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Could not create account.');
+      }
+
+      // Directly redirect to onboarding after successful signup
+      await new Promise(resolve => setTimeout(resolve, 800));
+      router.push('/onboarding');
+    } else {
+      const result = await signIn('credentials', {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        router.push('/onboarding');
+      } else {
+        throw new Error('Invalid email or password');
+      }
+    }
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Something went wrong.');
+    setIsAnimating(false);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const toggleMode = () => {
     setIsAnimating(true);
     setMode(prev => (prev === 'signin' ? 'signup' : 'signin'));
     setError('');
+    setOtpSent(false);
+    setEmailVerified(false);
+    setOtp(Array(6).fill(''));
+    setOtpError('');
   };
 
   return (
@@ -247,7 +383,7 @@ function AuthPageContent() {
           </motion.div>
 
           <AnimatePresence>
-            {error && (
+            {(error || otpError) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
@@ -270,7 +406,7 @@ function AuthPageContent() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm">{error}</p>
+                    <p className="text-sm">{error || otpError}</p>
                     {error.includes('Please sign in with email and password') && (
                       <div className="mt-2 flex space-x-4">
                         <button
@@ -383,8 +519,81 @@ function AuthPageContent() {
                     required
                   />
                 </div>
+             {mode === 'signup' && (
+  <div className="mt-2 flex justify-end">
+   <button
+  type="button"
+  onClick={handleSendOtp}
+  disabled={resendDisabled || otpLoading || !form.email}
+  className={`text-sm px-3 py-1 rounded-md ${
+    resendDisabled || otpLoading || !form.email
+      ? 'text-gray-400 cursor-not-allowed'
+      : 'text-blue-600 hover:text-blue-700'
+  }`}
+>
+  {otpLoading ? 'Sending...' : 
+   resendDisabled ? `Resend in ${resendTimer}s` : 
+   otpSent ? 'Resend Code' : 
+   'Send Code'}
+</button>
+  </div>
+)}
               </div>
             </motion.div>
+
+            {mode === 'signup' && otpSent && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={{ duration: 0.3 }}
+                className="space-y-2"
+              >
+                <p className="text-sm text-gray-600">Enter the 6-digit code sent to your email</p>
+                <div className="flex space-x-2">
+                  {Array.from({ length: 6 }).map((_, index) => (
+  <input
+    key={index}
+    ref={(el) => {
+      otpInputRefs.current[index] = el;
+    }}
+    type="text"
+    maxLength={1}
+    value={otp[index]}
+    onChange={(e) => handleOtpChange(index, e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === 'Backspace' && !otp[index] && index > 0) {
+        otpInputRefs.current[index - 1]?.focus();
+      }
+    }}
+    className="w-10 h-12 text-center border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    disabled={emailVerified}
+  />
+))}
+                </div>
+                {!emailVerified && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading || otp.join('').length !== 6}
+                    className={`text-sm px-3 py-1 rounded-md ${
+                      otpLoading || otp.join('').length !== 6
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-blue-600 hover:text-blue-700'
+                    }`}
+                  >
+                    {otpLoading ? 'Verifying...' : 'Verify Code'}
+                  </button>
+                )}
+                {emailVerified && (
+                  <p className="text-sm text-green-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Email verified
+                  </p>
+                )}
+              </motion.div>
+            )}
 
             <motion.div variants={itemVariants} custom={3}>
               <div className="relative pt-5">
@@ -451,9 +660,9 @@ function AuthPageContent() {
             >
               <button
                 type="submit"
-                disabled={loading || isAnimating}
+                disabled={loading || isAnimating || (mode === 'signup' && !emailVerified)}
                 className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-300 ${
-                  loading || isAnimating
+                  loading || isAnimating || (mode === 'signup' && !emailVerified)
                     ? 'bg-blue-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700'
                 } ${
@@ -487,7 +696,7 @@ function AuthPageContent() {
                 ) : mode === 'signin' ? (
                   'Sign In'
                 ) : (
-                  'Sign Up'
+                  emailVerified ? 'Sign Up' : 'Verify Email to Continue'
                 )}
               </button>
             </motion.div>
@@ -581,7 +790,6 @@ function AuthPageContent() {
   );
 }
 
-// Main exported component with Suspense boundary
 export default function AuthPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>

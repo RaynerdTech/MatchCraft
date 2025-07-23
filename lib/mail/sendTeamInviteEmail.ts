@@ -14,7 +14,7 @@ export const sendTeamInviteEmail = async ({
   eventTitle: string;
 }) => {
   await resend.emails.send({
-    from: "SoccerHub <onboarding@resend.dev>", // ✅ You must verify this domain or sender in Resend
+    from: "SoccerHub <noreply@raynerd.com.ng>",
     to,
     subject: `⚽ You've been invited to Team ${teamName} for ${eventTitle}`,
     html: `

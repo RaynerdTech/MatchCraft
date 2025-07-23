@@ -27,6 +27,7 @@ const UserSchema = new Schema<IUser>(
       type: String,
       unique: true,
       required: true,
+      lowercase: true,
     },
     name: String,
     image: String,
@@ -52,8 +53,10 @@ const UserSchema = new Schema<IUser>(
       enum: ['player', 'organizer', 'admin'],
       default: 'player',
     },
-    isVerified: Boolean,
-    // teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
+    isVerified: {
+  type: Boolean,
+  default: false, // so new users aren’t verified by default
+},
     subaccountCode: {
       type: String,
       default: null,
