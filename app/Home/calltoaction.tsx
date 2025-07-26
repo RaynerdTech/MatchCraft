@@ -101,7 +101,7 @@ const CallToAction = () => {
       >
         <motion.h2
           variants={item}
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight justify-center text-center"
         >
           Ready to Play <span className="text-yellow-300">Smarter</span>{" "}
           Football?
@@ -109,7 +109,7 @@ const CallToAction = () => {
 
         <motion.p
           variants={item}
-          className="text-xl sm:text-2xl mb-10 max-w-3xl mx-auto opacity-90 leading-relaxed"
+          className="text-xl sm:text-2xl mb-10 max-w-3xl mx-auto opacity-90 leading-relaxed text-center"
         >
           Join thousands of players and organizers using SoccerHub to connect,
           play, and manage games — the easy way.

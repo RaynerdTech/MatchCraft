@@ -59,7 +59,7 @@ export const sendTeamInviteEmail = async ({
             </ol>
             
             <div style="text-align: center;">
-              <a href="https://SoccerHub.app/login" class="button">Accept Invitation</a>
+              <a href="https://match-craft-six.vercel.app/dashboard/teams/invites" class="button">Accept Invitation</a>
             </div>
             
             <div class="divider"></div>
