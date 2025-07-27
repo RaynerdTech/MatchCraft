@@ -27,10 +27,8 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Upload profile image
     const imageUrl = await uploadImageToCloudinary(imageBase64, userId);
 
-    // Update user in DB
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
@@ -48,7 +46,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Generate new token to include updated user info
     const token = await encode({
       token: {
         _id: updatedUser._id.toString(),
@@ -62,6 +59,8 @@ export async function POST(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET!,
     });
 
+    console.log("🧠 Refreshed token role:", updatedUser.role);
+
     const response = NextResponse.json({
       success: true,
       user: {
@@ -74,14 +73,19 @@ export async function POST(req: NextRequest) {
       redirectTo: "/dashboard",
     });
 
-    // Set updated session cookie manually
-    response.cookies.set("next-auth.session-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
+    response.cookies.set(
+      process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
+      token,
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      }
+    );
 
     return response;
   } catch (error) {
