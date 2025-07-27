@@ -13,6 +13,7 @@ import {
   PartyPopper,
   CheckCircle2,
 } from "lucide-react";
+import imageCompression from "browser-image-compression";
 
 type Props = {
   userId: string;
@@ -51,6 +52,7 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropAreaRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const priceInputRef = useRef<HTMLInputElement>(null);
 
   // State for success modal and created event ID
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
@@ -67,8 +69,8 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     slots: 10,
     image: null as File | null,
     preview: null as string | null,
-    teamOnly: false, // ✅ New
-    allowFreePlayersIfTeamIncomplete: false, // ✅ New
+    teamOnly: false,
+    allowFreePlayersIfTeamIncomplete: false,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -178,8 +180,8 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     if (!formData.endTime) newErrors.endTime = "Please select an end time";
 
     if (formData.pricePerPlayer > 0 && formData.pricePerPlayer < 1000) {
-    newErrors.pricePerPlayer = "Minimum price per player is ₦1000";
-  }
+      newErrors.pricePerPlayer = "Minimum price per player is ₦1000";
+    }
     // Replace the time comparison in validateForm with:
     if (formData.time && formData.endTime) {
       const startMinutes = timeToMinutes(formData.time);
@@ -190,14 +192,14 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       }
     }
 
-    if (!formData.preview) newErrors.image = "Please upload an event banner"; // Changed to check preview instead of image File object
+    if (!formData.preview) newErrors.image = "Please upload an event banner";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- File Handling ---
-  const handleFile = (file: File) => {
+  // --- File Handling with Compression ---
+  const handleFile = async (file: File) => {
     if (!file.type.match("image.*")) {
       setErrors((prev) => ({
         ...prev,
@@ -206,26 +208,43 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    // Log original file size
+    console.log('Original file size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+
+    try {
+      const options = {
+        maxSizeMB: 1, // Maximum file size in MB
+        maxWidthOrHeight: 1920, // Maximum width or height
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+      
+      // Log compressed file size
+      console.log('Compressed file size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+
+      setErrors((prev) => ({ ...prev, image: "" }));
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const previewUrl = reader.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          image: compressedFile,
+          preview: previewUrl,
+        }));
+      };
+      reader.onerror = () => {
+        setErrors((prev) => ({ ...prev, image: "Failed to process image" }));
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error('Error compressing image:', error);
       setErrors((prev) => ({
         ...prev,
-        image: "Image size should not exceed 5MB",
+        image: "Failed to compress image. Please try another image.",
       }));
-      return;
     }
-
-    setErrors((prev) => ({ ...prev, image: "" }));
-    setFormData((prev) => ({ ...prev, image: file }));
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const previewUrl = reader.result as string;
-      setFormData((prev) => ({ ...prev, preview: previewUrl }));
-    };
-    reader.onerror = () => {
-      setErrors((prev) => ({ ...prev, image: "Failed to process image" }));
-    };
-    reader.readAsDataURL(file);
   };
 
   // --- Location Autocomplete ---
@@ -388,6 +407,19 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Handle price input focus to clear initial zero
+  const handlePriceFocus = () => {
+    if (priceInputRef.current && formData.pricePerPlayer === 0) {
+      setFormData(prev => ({ ...prev, pricePerPlayer: '' as unknown as number }));
+    }
+  };
+
+  const handlePriceBlur = () => {
+    if (priceInputRef.current && formData.pricePerPlayer === '' as unknown as number) {
+      setFormData(prev => ({ ...prev, pricePerPlayer: 0 }));
+    }
+  };
+
   // --- View Event Handler ---
   const handleViewEvent = () => {
     setShowSuccessModal(false);
@@ -396,9 +428,9 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
 
   return (
     <>
-    <div className="bg-gray-50 py-8 flex items-center justify-center">
-  <div className="w-full max-w-3xl">
-    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className="bg-gray-50 py-8 flex items-center justify-center">
+        <div className="w-full max-w-3xl">
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Form Header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-center">
               <h1 className="text-2xl md:text-4xl font-bold text-white">
@@ -646,44 +678,47 @@ export default function CreateEventForm({ userId, onSuccess }: Props) {
                 </div>
 
                 {/* Price Per Player Field */}
-               <div>
-  <label
-    htmlFor="pricePerPlayer"
-    className="block text-sm font-medium text-gray-700 mb-2"
-  >
-    Price Per Player (₦)
-  </label>
-  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
-    <span className="text-gray-800 font-medium">₦</span>
-    <input
-      id="pricePerPlayer"
+                <div>
+                  <label
+                    htmlFor="pricePerPlayer"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Price Per Player (₦)
+                  </label>
+                  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400">
+                    <span className="text-gray-800 font-medium">₦</span>
+                    <input
+                      id="pricePerPlayer"
                       type="number"
-      min={formData.pricePerPlayer > 0 ? "1000" : "0"}
-      placeholder="Enter amount"
-      value={formData.pricePerPlayer}
-      onChange={(e) => {
-        const value = Number(e.target.value);
-        setFormData((prev) => ({
-          ...prev,
-          pricePerPlayer: value,
-        }));
-        setErrors((prev) => ({
-          ...prev,
-          pricePerPlayer: value > 0 && value < 1000 ? "Minimum price is ₦1000" : "",
-        }));
-      }}
-      className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 ml-2"
-    />
-  </div>
-  {errors.pricePerPlayer && (
-    <p className="text-red-500 text-xs mt-1 ml-1">
-      {errors.pricePerPlayer}
-    </p>
-  )}
-  <p className="mt-1 text-xs text-gray-500">
-    Minimum of ₦1000 is required for the event
-  </p>
-</div>
+                      min={formData.pricePerPlayer > 0 ? "1000" : "0"}
+                      placeholder="Enter amount"
+                      value={formData.pricePerPlayer}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        setFormData((prev) => ({
+                          ...prev,
+                          pricePerPlayer: value,
+                        }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          pricePerPlayer: value > 0 && value < 1000 ? "Minimum price is ₦1000" : "",
+                        }));
+                      }}
+                      onFocus={handlePriceFocus}
+                      onBlur={handlePriceBlur}
+                      ref={priceInputRef}
+                      className="w-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 ml-2"
+                    />
+                  </div>
+                  {errors.pricePerPlayer && (
+                    <p className="text-red-500 text-xs mt-1 ml-1">
+                      {errors.pricePerPlayer}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Minimum of ₦1000 is required for the event
+                  </p>
+                </div>
 
                 {/* Slots Field */}
                 <div>

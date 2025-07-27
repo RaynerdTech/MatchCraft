@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSession } from "next-auth/react";
 import type { Variants } from "framer-motion";
+import imageCompression from "browser-image-compression";
 
 // Constants for dropdown options
 const skillOptions = ["beginner", "intermediate", "advanced"];
@@ -54,14 +55,14 @@ const buttonVariants = {
 const validateImage = (base64: string) => {
   if (!base64) return "Image is required";
   if (!base64.startsWith("data:image/")) {
-    return "Invalid image format";
+    return "Invalid image format. Please upload a valid image file (JPEG, PNG)";
   }
 
   const base64Length = base64.length - "data:image/png;base64,".length;
   const sizeInBytes = 4 * Math.ceil(base64Length / 3) * 0.5624896334383812;
 
   if (sizeInBytes > 2 * 1024 * 1024) {
-    return "Image must be smaller than 2MB";
+    return "Image must be smaller than 2MB after compression";
   }
 
   return null;
@@ -83,6 +84,7 @@ export default function OnboardingPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [formValid, setFormValid] = useState(false);
+  const [compressionInProgress, setCompressionInProgress] = useState(false);
 
   // Check for authenticated session
   useEffect(() => {
@@ -103,17 +105,41 @@ export default function OnboardingPage() {
     setFormValid(Boolean(isValid));
   }, [form]);
 
-  // Handle file processing
-  const processFile = useCallback((file: File) => {
-    setError("");
-    setUploadProgress(0);
+  // Compress and process image file
+  const processFile = useCallback(async (file: File) => {
+  console.log(`Original file size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+  setError("");
+  setUploadProgress(0);
+  setCompressionInProgress(true);
+
+  try {
+    // Validate file type before compression
+    if (!file.type.match(/image\/(jpeg|png|jpg)/)) {
+      throw new Error("Only JPEG or PNG images are allowed");
+    }
+
+    // Set up compression options
+    const options = {
+      maxSizeMB: 1.9, // Compress to slightly under 2MB
+      maxWidthOrHeight: 1024,
+      useWebWorker: true,
+      initialQuality: 0.7,
+    };
+
+    // Compress the image
+    const compressedFile = await imageCompression(file, options);
+    console.log(`Compressed file size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+
+    // Check compressed file size
+    if (compressedFile.size > 2 * 1024 * 1024) {
+      throw new Error("Please upload an image between 0-2MB. Compression couldn't reduce size enough.");
+    }
 
     const reader = new FileReader();
     reader.onloadstart = () => setLoading(true);
     reader.onprogress = (event) => {
       if (event.lengthComputable) {
-        const percentLoaded = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress(percentLoaded);
+        setUploadProgress(Math.round((event.loaded / event.total) * 100));
       }
     };
     reader.onloadend = () => {
@@ -122,15 +148,23 @@ export default function OnboardingPage() {
       setImagePreview(base64String);
       setLoading(false);
       setUploadProgress(100);
+      setCompressionInProgress(false);
     };
     reader.onerror = () => {
-      setError("Failed to read image file");
+      setError("Failed to process image");
       setLoading(false);
       setUploadProgress(0);
+      setCompressionInProgress(false);
     };
-    reader.readAsDataURL(file);
-  }, []);
-
+    reader.readAsDataURL(compressedFile);
+  } catch (err: any) {
+    console.error("Image processing error:", err);
+    setError(err.message || "Image processing failed");
+    setLoading(false);
+    setUploadProgress(0);
+    setCompressionInProgress(false);
+  }
+}, []);
   // Handle drag events
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -341,7 +375,7 @@ export default function OnboardingPage() {
                   className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+1 (123) 456-7890"
+                  placeholder="+234 80 3253 2020"
                   required
                 />
               </motion.div>
@@ -436,10 +470,13 @@ export default function OnboardingPage() {
                   className="hidden"
                   id="profile-picture"
                   onChange={handleImageChange}
+                  disabled={compressionInProgress}
                 />
                 <label
                   htmlFor="profile-picture"
-                  className="cursor-pointer text-center"
+                  className={`cursor-pointer text-center ${
+                    compressionInProgress ? "opacity-50" : ""
+                  }`}
                 >
                   <svg
                     className="w-12 h-12 mx-auto text-gray-400"
@@ -463,6 +500,11 @@ export default function OnboardingPage() {
                   <p className="text-xs text-gray-500 mt-1">
                     PNG, JPG up to 2MB
                   </p>
+                  {compressionInProgress && (
+                    <p className="text-xs text-blue-600 mt-2">
+                      Compressing image... please wait
+                    </p>
+                  )}
                 </label>
               </motion.div>
 
@@ -490,6 +532,7 @@ export default function OnboardingPage() {
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
+                        disabled={compressionInProgress}
                       >
                         <svg
                           className="w-4 h-4"
@@ -524,12 +567,12 @@ export default function OnboardingPage() {
             <motion.div variants={itemVariants} className="pt-2">
               <motion.button
                 type="submit"
-                disabled={loading || !formValid}
+                disabled={loading || !formValid || compressionInProgress}
                 variants={buttonVariants}
-                whileHover={formValid ? "hover" : {}}
-                whileTap={formValid ? "tap" : {}}
+                whileHover={formValid && !compressionInProgress ? "hover" : {}}
+                whileTap={formValid && !compressionInProgress ? "tap" : {}}
                 className={`w-full py-4 rounded-xl font-semibold text-white transition-all duration-300 ${
-                  loading
+                  loading || compressionInProgress
                     ? "bg-blue-400"
                     : formValid
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600"
@@ -549,6 +592,8 @@ export default function OnboardingPage() {
                     />
                     Processing...
                   </span>
+                ) : compressionInProgress ? (
+                  "Compressing Image..."
                 ) : (
                   "Complete Profile"
                 )}
