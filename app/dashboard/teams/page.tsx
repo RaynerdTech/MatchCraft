@@ -10,20 +10,27 @@ export default function MyTeamPage() {
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const res = await axios.get("/api/teams/my");
-        setTeam(res.data);
-      } catch (err) {
-        console.error("Error fetching team:", err);
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const fetchTeam = async () => {
+    try {
+      const res = await axios.get("/api/teams/my");
+      setTeam(res.data);
+    } catch (err: any) {
+      console.error("Error fetching team:", err);
+      if (err.response?.status === 404) {
+        setTeam(null); // No team found
+      } else {
+        // Optional: Handle other errors like 500
+        console.error("Unexpected error:", err.message || err);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchTeam();
-  }, []);
+  fetchTeam();
+}, []);
+
 
   if (loading)
     return (
@@ -166,7 +173,9 @@ export default function MyTeamPage() {
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {team.members.map((member: any, idx: number) => (
+              {team.members
+                .filter((member: any) => member.userId)
+                .map((member: any, idx: number) => (
                 <div
                   key={idx}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200"

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/authOptions';
 import { connectDB } from '@/lib/mongoose';
 import Team from '@/lib/models/Team';
 import User from '@/lib/models/User';
-import Event from '@/lib/models/Event';
+import '@/lib/models/Event';
 
 export const dynamic = 'force-dynamic';
 
