@@ -45,13 +45,16 @@ export default function Topbar({ onMenuClick, isSidebarOpen }: {
         <div className="flex items-center justify-between h-16">
           {/* Left section */}
           <div className="flex items-center">
-            <button
-              onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-            >
-              {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+           {session?.user && (
+  <button
+    onClick={onMenuClick}
+    className="lg:hidden p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+    aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+  >
+    {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+  </button>
+)}
+
             
             <div className="hidden lg:flex items-center">
               <span className="mx-2 text-gray-300">|</span>
