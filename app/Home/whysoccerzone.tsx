@@ -3,18 +3,17 @@
 import { motion } from "framer-motion";
 import {
   XCircle,
-  CheckCircle2,
   Users,
   QrCode,
   Wallet,
   MapPin,
   ShieldCheck,
   History,
-  ChevronRight,
-  Calendar,
   Trophy,
   Frown,
-  Smile,
+  Lightbulb, // For "The Idea"
+  Wrench,    // For "The Solution"
+  Users2,    // For "The Community"
 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
@@ -120,32 +119,32 @@ const WhySoccerZone = () => {
     },
   ];
 
-  const timeline = [
-    {
-      icon: <Frown className="w-6 h-6 text-red-500" />,
-      title: "The Frustration",
-      description: "Struggling to find reliable games and players",
-      image: "/images/timeline-frustration.svg",
-    },
-    {
-      icon: <Calendar className="w-6 h-6 text-blue-500" />,
-      title: "The Idea",
-      description: "Why not build a platform for footballers?",
-      image: "/images/timeline-idea.svg",
-    },
-    {
-      icon: <Trophy className="w-6 h-6 text-green-500" />,
-      title: "The Solution",
-      description: "SoccerHub was born to organize the chaos",
-      image: "/images/timeline-solution.svg",
-    },
-    {
-      icon: <Smile className="w-6 h-6 text-blue-500" />,
-      title: "The Community",
-      description: "Thousands of games played every week",
-      image: "/images/timeline-community.svg",
-    },
-  ];
+ const timeline = [
+  {
+    icon: <Frown className="w-6 h-6 text-red-500" />,
+    title: "The Frustration",
+    description: "Struggling to find reliable games and players",
+    image: "/images/timeline-frustration.svg",
+  },
+  {
+    icon: <Lightbulb className="w-6 h-6 text-yellow-500" />, // Changed to lightbulb for "idea"
+    title: "The Idea",
+    description: "Why not build a platform for footballers?",
+    image: "/images/timeline-idea.svg",
+  },
+  {
+    icon: <Wrench className="w-6 h-6 text-blue-500" />, // Changed to wrench for "solution"
+    title: "The Solution",
+    description: "SoccerHub was born to organize the chaos",
+    image: "/images/timeline-solution.svg",
+  },
+  {
+    icon: <Users2 className="w-6 h-6 text-green-500" />, // Changed to Users2 for "community"
+    title: "The Community",
+    description: "Thousands of games played every week",
+    image: "/images/timeline-community.svg",
+  },
+];
 
   return (
     <section
@@ -308,7 +307,7 @@ const WhySoccerZone = () => {
                       {solution.description}
                     </p>
                     <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-end">
-                      <ChevronRight className="w-5 h-5 text-blue-600" />
+                     
                     </div>
                   </div>
                 </BentoCard>

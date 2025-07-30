@@ -4,7 +4,7 @@ import { Search, MapPin, Calendar, Users } from "lucide-react";
 
 // This is the skeleton loading state shown while the client component loads
 const LoadingSkeleton = () => (
-  <div className="min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+  <div className="min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 sm:p-6 lg:p-8">
     <div className="max-w-7xl mx-auto">
       <header className="text-center mb-8 sm:mb-12 py-8 sm:py-16 rounded-3xl overflow-hidden relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>

@@ -62,7 +62,7 @@ const Header = () => {
           >
             <span className="font-barlow-condensed tracking-tight">S</span>
             <span className="relative"> 
-              <span className="relative inline-block w-6 h-6 mx-1">
+              <span className="relative inline-block w-6 h-6">
                 <Image
                   src="/images/football-icon.png"
                   alt="Football"
