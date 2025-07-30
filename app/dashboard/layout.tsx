@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             isSidebarOpen={isSidebarOpen}
           />
 
-          <main className="flex-1 overflow-y-auto px-2 py-6">
+          <main className="flex-1 overflow-y-auto px-4 py-6">
             {children}
           </main>
         </div>
