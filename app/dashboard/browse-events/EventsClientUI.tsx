@@ -479,7 +479,7 @@ const handleEventClick = (event: Event) => {
   const numberOfSkeletons = 8;
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-3xl mb-8 sm:mb-12 shadow-xl">
